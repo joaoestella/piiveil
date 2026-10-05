@@ -1,0 +1,12 @@
+{
+  "$comentario": "Exemplo de .sigilo/config.json. Copie para a pasta .sigilo/ do seu projeto e ajuste.",
+  "termos": ["Operação Fênix", "Fazenda Boa Esperança"],
+  "nomes": ["Zé do Caminhão"],
+  "empresas": ["Padaria Pão Dourado"],
+  "prenomes": ["Kauê", "Ítalo"],
+  "ignorar": ["Paulo Freire"],
+  "tiposDesativados": [],
+  "prompt": "bloquear",
+  "bloquearArquivosBinarios": true,
+  "desmascararBash": true
+}
