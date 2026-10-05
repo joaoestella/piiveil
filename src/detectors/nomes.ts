@@ -17,7 +17,7 @@ const CAIXA_ALTA = String.raw`\p{Lu}{2,}(?:-\p{Lu}{2,})*`;
 const PALAVRA = `(?:${TITULO}|${CAIXA_ALTA})`;
 const PARTICULA = String.raw`(?:d[aeo]s?|D[AEO]S?|di|du|del|della|van|von|der)`;
 const SEQUENCIA = new RegExp(
-  String.raw`(?<![\p{L}\p{N}_])${PALAVRA}(?:[ \t]+(?:${PARTICULA}[ \t]+)?${PALAVRA})*(?![\p{L}\p{N}_])`,
+  String.raw`(?<![\p{L}\p{N}_])${PALAVRA}(?:[ \u00A0](?:${PARTICULA}[ \u00A0])?${PALAVRA})*(?![\p{L}\p{N}_])`,
   "gu",
 );
 const PALAVRA_SOLTA = new RegExp(`${PALAVRA}|${PARTICULA}`, "gu");
@@ -64,7 +64,7 @@ const LUGAR = new Set(
   ].map(normalizarPalavra),
 );
 
-const TRATAMENTO = /(?:^|[^\p{L}])(?:Sr|Sra|Srta|Dr|Dra|Dom|Dona|Prof|Profa|Exmo|Exma|Ilmo|Ilma|Sr\(a\))\.?[ \t]+$/u;
+const TRATAMENTO = /(?:^|[^\p{L}])(?:Sr|Sra|Srta|Dr|Dra|Dom|Dona|Prof|Profa|Exmo|Exma|Ilmo|Ilma|Sr\(a\))\.?[ \u00A0]$/u;
 
 interface Palavra {
   texto: string;

@@ -11,7 +11,7 @@ const LIGACAO = String.raw`(?:de|da|do|das|dos|e|&|DE|DA|DO|DAS|DOS|E|em|EM)`;
 const SUFIXO_FORTE = String.raw`Ltda\.?|LTDA\.?|S\.\s?A\.?|S\/A|EIRELI|Eireli|SLU|S\.?L\.?U\.?`;
 const SUFIXO_FRACO = String.raw`SA|ME|EPP`;
 const RAZAO = new RegExp(
-  String.raw`(?<![\p{L}\p{N}])(?<nome>${PALAVRA}(?:[ \t]+(?:${LIGACAO}[ \t]+)?${PALAVRA}){0,8})(?:[ \t]*[-–,][ \t]*|[ \t]+)(?<sufixo>${SUFIXO_FORTE}|${SUFIXO_FRACO})(?![\p{L}\p{N}])`,
+  String.raw`(?<![\p{L}\p{N}])(?<nome>${PALAVRA}(?:[ \u00A0](?:${LIGACAO}[ \u00A0])?${PALAVRA}){0,8})(?:[ \u00A0]?[-–,][ \u00A0]?|[ \u00A0])(?<sufixo>${SUFIXO_FORTE}|${SUFIXO_FRACO})(?![\p{L}\p{N}])`,
   "gud",
 );
 

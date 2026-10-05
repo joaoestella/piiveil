@@ -162,6 +162,12 @@ describe("nomes de pessoas", () => {
       "Fernanda Lima Rocha",
     ]);
   });
+  test("colunas de assinatura separadas por vários espaços viram nomes distintos", () => {
+    assert.deepEqual(achar("HELENA MARQUES DE OLIVEIRA          Rafael Augusto Nogueira", "PESSOA"), [
+      "HELENA MARQUES DE OLIVEIRA",
+      "Rafael Augusto Nogueira",
+    ]);
+  });
   test("prenomes e nomes extras do usuário", () => {
     const d = criarDetector({ prenomes: ["Kauê"], nomes: ["Zuleide Pimenta"] });
     assert.deepEqual(
