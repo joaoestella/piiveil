@@ -1920,7 +1920,11 @@ var INSTRUCOES_MODELO = [
   "Trate cada token como o pr\xF3prio dado. Ao escrever arquivos, editar ou rodar comandos, use os tokens exatamente",
   "como aparecem (com colchetes, mai\xFAsculas e n\xFAmero): eles s\xE3o trocados pelos valores reais antes da execu\xE7\xE3o,",
   "e o usu\xE1rio v\xEA os valores reais na tela. N\xE3o tente descobrir, adivinhar ou reconstruir os valores originais,",
-  "n\xE3o invente tokens novos e n\xE3o altere o n\xFAmero de um token."
+  "n\xE3o invente tokens novos e n\xE3o altere o n\xFAmero de um token.",
+  "Aten\xE7\xE3o com a ferramenta Edit: ela confere se o old_string existe no arquivo antes de os tokens serem trocados,",
+  "ent\xE3o um old_string com tokens nunca \xE9 encontrado. Escolha um old_string sem tokens (um trecho vizinho que",
+  "identifique o local sem ambiguidade); o new_string pode conter tokens normalmente. Se n\xE3o houver trecho assim,",
+  "reescreva o arquivo inteiro com Write, usando os tokens."
 ].join(" ");
 async function sessionStart(entrada) {
   const ctx = contexto(entrada);

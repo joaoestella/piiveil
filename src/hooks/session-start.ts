@@ -7,6 +7,10 @@ export const INSTRUCOES_MODELO = [
   "como aparecem (com colchetes, maiúsculas e número): eles são trocados pelos valores reais antes da execução,",
   "e o usuário vê os valores reais na tela. Não tente descobrir, adivinhar ou reconstruir os valores originais,",
   "não invente tokens novos e não altere o número de um token.",
+  "Atenção com a ferramenta Edit: ela confere se o old_string existe no arquivo antes de os tokens serem trocados,",
+  "então um old_string com tokens nunca é encontrado. Escolha um old_string sem tokens (um trecho vizinho que",
+  "identifique o local sem ambiguidade); o new_string pode conter tokens normalmente. Se não houver trecho assim,",
+  "reescreva o arquivo inteiro com Write, usando os tokens.",
 ].join(" ");
 
 /** SessionStart: explica ao modelo como lidar com os tokens e avisa sobre problemas de configuração. */
