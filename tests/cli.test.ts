@@ -1,0 +1,49 @@
+import { afterEach, beforeEach, describe, test } from "node:test";
+import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
+import { Cofre } from "../src/vault/cofre.js";
+import { executarHook } from "../src/cli.js";
+import { prepararHooks, type AmbienteHooks, type Qualquer } from "./helpers/hooks.js";
+
+const executar = promisify(execFile);
+
+let amb: AmbienteHooks["amb"];
+beforeEach(() => {
+  ({ amb } = prepararHooks());
+});
+afterEach(() => amb.limpar());
+
+describe("linha de comando", () => {
+  test("JSON inválido no PostToolUse oculta a saída", async () => {
+    const r = (await executarHook("post-tool-use", "{quebrado")) as Qualquer;
+    assert.ok(r.hookSpecificOutput.updatedToolOutput.startsWith("[sigilo]"));
+  });
+
+  test("processo real: stdin -> stdout", async () => {
+    const cli = fileURLToPath(new URL("../src/cli.js", import.meta.url));
+    const filho = execFile(process.execPath, [cli, "hook", "post-tool-use"], {
+      env: { ...process.env, SIGILO_HOME: amb.home, CLAUDE_PROJECT_DIR: amb.projeto },
+    });
+    let saida = "";
+    filho.stdout!.on("data", (d) => (saida += d));
+    filho.stdin!.end(JSON.stringify({ hook_event_name: "PostToolUse", tool_name: "Bash", tool_output: "fone (11) 98765-4321" }));
+    await new Promise((r) => filho.on("close", r));
+    assert.equal(JSON.parse(saida).hookSpecificOutput.updatedToolOutput, "fone [TELEFONE_1]");
+  });
+
+  test("status e limpar", async () => {
+    const cli = fileURLToPath(new URL("../src/cli.js", import.meta.url));
+    const env = { ...process.env, SIGILO_HOME: amb.home };
+    const c = Cofre.abrir(amb.projeto);
+    c.tokenPara("Maria Souza", "PESSOA");
+    c.salvar();
+    const status = await executar(process.execPath, [cli, "status", "--projeto", amb.projeto], { env });
+    assert.match(status.stdout, /dados no cofre: 1 \(PESSOA: 1\)/);
+    assert.ok(!status.stdout.includes("Maria"), "status não pode exibir valores");
+    const limpar = await executar(process.execPath, [cli, "limpar", "--projeto", amb.projeto], { env });
+    assert.match(limpar.stdout, /apagado/);
+    assert.equal(Cofre.abrir(amb.projeto).tamanho, 0);
+  });
+});
