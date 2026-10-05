@@ -1,0 +1,19 @@
+LAUDO MÉDICO PERICIAL
+
+DOCUMENTO SINTÉTICO PARA TESTES: TODOS OS DADOS SÃO FICTÍCIOS.
+
+Paciente: Antônio Carlos Ribeiro Lima
+CPF: 615.803.924-15
+NIS: 12847305612
+Data de nascimento: 03/07/1971
+Endereço: Rua Doutor Exemplo, 77, Bairro Inventado, CEP 30140-071, Belo Horizonte/MG
+Contato: (31) 99712-3344 / antonio.lima.teste@exemplo.org
+
+Histórico: o paciente relata dor lombar crônica há cinco anos. Acompanhado pela Dra. Juliana Prado Siqueira desde 2021.
+Esposa e acompanhante: Sra. Rosângela Ribeiro Lima.
+
+Conclusão: incapacidade parcial e temporária para atividades que exijam esforço físico.
+
+Belo Horizonte, 2 de outubro de 2026.
+Dra. Juliana Prado Siqueira
+CRM fictício 00000-MG

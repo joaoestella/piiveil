@@ -1,0 +1,23 @@
+CONTRATO DE LOCAÇÃO RESIDENCIAL
+
+DOCUMENTO SINTÉTICO PARA TESTES: TODOS OS NOMES, NÚMEROS E ENDEREÇOS SÃO FICTÍCIOS.
+
+LOCADORA: HELENA MARQUES DE OLIVEIRA, brasileira, casada, arquiteta, portadora do RG 34.512.876-X SSP/SP, inscrita no CPF sob o nº 381.294.057-41, residente na Rua das Palmeiras Imaginárias, 120, apto. 31, CEP 04538-132, São Paulo/SP, e-mail helena.locadora@exemplo.com.br, telefone (11) 98123-4567.
+
+LOCATÁRIO: Rafael Augusto Nogueira, brasileiro, solteiro, analista de sistemas, CPF 704.518.236-80, telefone +55 (21) 3456-7890, e-mail rafael.nogueira@exemplo.com.
+
+FIADORA: Lumen Gestão Patrimonial Ltda., inscrita no CNPJ 47.281.035/0001-00, neste ato representada por sua sócia Beatriz Caldeira Fontes.
+
+CLÁUSULA PRIMEIRA. O imóvel situado na Avenida Horizonte Fictício, 900, Jardim Exemplo, CEP 01.310-930, será utilizado exclusivamente para fins residenciais.
+
+CLÁUSULA SEGUNDA. O aluguel mensal de R$ 3.250,00 será pago até o dia 5 de cada mês, por PIX para a chave helena.locadora@exemplo.com.br ou no cartão 5274 6180 3925 7149.
+
+CLÁUSULA TERCEIRA. Fica eleito o foro da Comarca de São Paulo para dirimir quaisquer dúvidas, nos termos do processo de referência 1003478-43.2025.8.26.0577.
+
+São Paulo, 12 de março de 2026.
+
+HELENA MARQUES DE OLIVEIRA                Rafael Augusto Nogueira
+Locadora                                  Locatário
+
+Testemunhas: Carlos Eduardo Pinheiro e Marina Lopes Andrade.
+Advogado responsável: Dr. Tiago Mendes Barros, OAB/SP 123.456.
