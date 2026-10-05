@@ -25,6 +25,8 @@ function negar(motivo: string): SaidaHook {
  * PreToolUse:
  * - Write, Edit, NotebookEdit e Bash: troca tokens pelos valores reais antes
  *   de executar, para que os arquivos gravados tenham os dados reais;
+ * - Read e Glob: idem nos caminhos, já que nomes de arquivo também são
+ *   mascarados na saída das ferramentas;
  * - Grep: idem no padrão de busca, com os valores escapados para regex;
  * - Read: bloqueia PDFs e imagens (opcional), que não passam pelo mascaramento.
  */
@@ -34,24 +36,22 @@ export async function preToolUse(entrada: EntradaHook): Promise<SaidaHook | null
   const ferramenta = String(entrada.tool_name ?? "");
   const input = (entrada.tool_input ?? {}) as Record<string, unknown>;
 
-  if (ferramenta === "Read") {
-    const caminho = String(input.file_path ?? "");
-    if (ctx.config.bloquearArquivosBinarios && EXTENSOES_BINARIAS.has(extname(caminho).toLowerCase())) {
-      return negar(
-        "sigilo: PDFs e imagens lidos pelo Read chegam ao modelo sem pseudonimização. " +
-          "Extraia o texto pelo Bash (por exemplo, `pdftotext arquivo.pdf -`), cuja saída é mascarada, " +
-          "ou peça ao usuário para desativar a opção bloquearArquivosBinarios.",
-      );
-    }
-    return null;
-  }
+  const bloquearRead = (caminho: string): SaidaHook | null =>
+    ferramenta === "Read" && ctx.config.bloquearArquivosBinarios && EXTENSOES_BINARIAS.has(extname(caminho).toLowerCase())
+      ? negar(
+          "sigilo: PDFs e imagens lidos pelo Read chegam ao modelo sem pseudonimização. " +
+            "Extraia o texto pelo Bash (por exemplo, `pdftotext arquivo.pdf -`), cuja saída é mascarada, " +
+            "ou peça ao usuário para desativar a opção bloquearArquivosBinarios.",
+        )
+      : null;
 
   if (ferramenta === "Bash" && !ctx.config.desmascararBash) return null;
 
   const serializado = JSON.stringify(input);
   PADRAO_TOKEN.lastIndex = 0;
-  if (!PADRAO_TOKEN.test(serializado)) return null;
+  const temToken = PADRAO_TOKEN.test(serializado);
   PADRAO_TOKEN.lastIndex = 0;
+  if (!temToken) return bloquearRead(String(input.file_path ?? ""));
 
   let cofre: Cofre;
   try {
@@ -89,6 +89,8 @@ export async function preToolUse(entrada: EntradaHook): Promise<SaidaHook | null
     novo = desmascararProfundo(input, cofre);
   }
 
+  const bloqueio = bloquearRead(String(novo.file_path ?? ""));
+  if (bloqueio) return bloqueio;
   if (JSON.stringify(novo) === serializado) return null;
 
   const desconhecidos = tokensDesconhecidos(serializado, cofre);

@@ -16,9 +16,15 @@ beforeEach(() => {
 afterEach(() => amb.limpar());
 
 describe("linha de comando", () => {
-  test("JSON inválido no PostToolUse oculta a saída", async () => {
+  test("JSON inválido no PostToolUse interrompe a sessão", async () => {
     const r = (await executarHook("post-tool-use", "{quebrado")) as Qualquer;
-    assert.ok(r.hookSpecificOutput.updatedToolOutput.startsWith("[sigilo]"));
+    assert.equal(r.continue, false);
+    assert.match(r.stopReason, /sigilo/);
+  });
+
+  test("JSON inválido no PreToolUse nega a ferramenta", async () => {
+    const r = (await executarHook("pre-tool-use", "{quebrado")) as Qualquer;
+    assert.equal(r.hookSpecificOutput.permissionDecision, "deny");
   });
 
   test("processo real: stdin -> stdout", async () => {
@@ -28,9 +34,9 @@ describe("linha de comando", () => {
     });
     let saida = "";
     filho.stdout!.on("data", (d) => (saida += d));
-    filho.stdin!.end(JSON.stringify({ hook_event_name: "PostToolUse", tool_name: "Bash", tool_output: "fone (11) 98765-4321" }));
+    filho.stdin!.end(JSON.stringify({ hook_event_name: "PostToolUse", tool_name: "Bash", tool_response: { stdout: "fone (11) 98765-4321", stderr: "", interrupted: false } }));
     await new Promise((r) => filho.on("close", r));
-    assert.equal(JSON.parse(saida).hookSpecificOutput.updatedToolOutput, "fone [TELEFONE_1]");
+    assert.deepEqual(JSON.parse(saida).hookSpecificOutput.updatedToolOutput, { stdout: "fone [TELEFONE_1]", stderr: "", interrupted: false });
   });
 
   test("status e limpar", async () => {

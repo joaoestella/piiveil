@@ -22,17 +22,13 @@ const HOOKS: Record<string, Hook> = {
   "session-start": sessionStart,
 };
 
-/** Resposta usada quando o próprio hook falha: nunca deixa o dado passar. */
+/** Resposta usada quando a entrada do hook não pôde ser lida: nunca deixa o dado passar. */
 function saidaDeFalha(evento: string, e: unknown): SaidaHook | null {
   const motivo = `sigilo: falha ao processar (${descreverErro(e)})`;
   if (evento === "post-tool-use") {
-    return {
-      systemMessage: motivo,
-      hookSpecificOutput: {
-        hookEventName: "PostToolUse",
-        updatedToolOutput: `[sigilo] A saída desta ferramenta foi ocultada por segurança (${descreverErro(e)}).`,
-      },
-    };
+    // Sem a entrada não há como saber o formato da saída para substituí-la;
+    // interromper o Claude é a única forma de impedir que ela siga para o modelo.
+    return { continue: false, stopReason: `${motivo}. A sessão foi interrompida para proteger os dados.`, systemMessage: motivo };
   }
   if (evento === "pre-tool-use") {
     return { hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: motivo } };

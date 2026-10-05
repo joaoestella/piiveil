@@ -1719,52 +1719,66 @@ function descreverErro(e) {
   if (e instanceof Error) return `erro interno (${e.name})`;
   return "erro interno";
 }
-function textoDaSaida(saida) {
-  if (typeof saida === "string") return saida;
-  if (Array.isArray(saida)) {
-    const textos = saida.map((p) => p && typeof p === "object" && typeof p.text === "string" ? p.text : null).filter((t) => t !== null);
-    return textos.length ? textos.join("\n") : JSON.stringify(saida, null, 2);
-  }
-  if (saida && typeof saida === "object") {
-    const o = saida;
-    if (typeof o.stdout === "string" || typeof o.stderr === "string") {
-      return [o.stdout, o.stderr].filter((s) => typeof s === "string" && s.length > 0).join("\n");
-    }
-    const arquivo = o.file;
-    if (arquivo && typeof arquivo.content === "string") return arquivo.content;
-    if (typeof o.content === "string") return o.content;
-    if (Array.isArray(o.content)) return textoDaSaida(o.content);
-    if (typeof o.result === "string") return o.result;
-    return JSON.stringify(saida, null, 2);
-  }
-  return null;
-}
 
 // src/hooks/post-tool-use.ts
 async function postToolUse(entrada) {
+  const bruto = entrada.tool_response !== void 0 ? entrada.tool_response : entrada.tool_output;
+  if (bruto === void 0 || bruto === null) return null;
   try {
     const ctx = contexto(entrada);
     if (!ctx.config.ativo) return null;
-    const bruto = entrada.tool_output !== void 0 ? entrada.tool_output : entrada.tool_response;
-    const texto = textoDaSaida(bruto);
-    if (texto === null || texto.length === 0) return null;
-    const resultado = await Cofre.comTrava(ctx.projeto, (cofre) => mascarar(texto, cofre, opcoesDeteccao(ctx.config)));
-    if (resultado.achados.length === 0) return null;
-    return {
-      hookSpecificOutput: {
-        hookEventName: "PostToolUse",
-        updatedToolOutput: resultado.texto
-      }
-    };
+    const opcoes = opcoesDeteccao(ctx.config);
+    const { valor, alterado } = await Cofre.comTrava(
+      ctx.projeto,
+      (cofre) => transformarTextos(bruto, (texto) => mascarar(texto, cofre, opcoes).texto)
+    );
+    if (!alterado) return null;
+    return { hookSpecificOutput: { hookEventName: "PostToolUse", updatedToolOutput: valor } };
   } catch (e) {
+    const aviso = `[sigilo] Conte\xFAdo ocultado: n\xE3o foi poss\xEDvel pseudonimiz\xE1-lo com seguran\xE7a (${descreverErro(e)}). Avise o usu\xE1rio; n\xE3o tente obter o conte\xFAdo por outro caminho.`;
     return {
       systemMessage: `sigilo: sa\xEDda da ferramenta ocultada por seguran\xE7a (${descreverErro(e)})`,
-      hookSpecificOutput: {
-        hookEventName: "PostToolUse",
-        updatedToolOutput: `[sigilo] A sa\xEDda desta ferramenta foi ocultada porque n\xE3o foi poss\xEDvel pseudonimiz\xE1-la com seguran\xE7a (${descreverErro(e)}). Avise o usu\xE1rio; n\xE3o tente obter o conte\xFAdo por outro caminho.`
-      }
+      hookSpecificOutput: { hookEventName: "PostToolUse", updatedToolOutput: ocultarTextos(bruto, aviso) }
     };
   }
+}
+function transformarTextos(valor, f) {
+  let alterado = false;
+  const visitar = (v) => {
+    if (typeof v === "string") {
+      if (v.length === 0) return v;
+      const novo = f(v);
+      if (novo !== v) alterado = true;
+      return novo;
+    }
+    if (Array.isArray(v)) return v.map(visitar);
+    if (v && typeof v === "object") {
+      return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, visitar(x)]));
+    }
+    return v;
+  };
+  return { valor: visitar(valor), alterado };
+}
+var CAMPOS_PRESERVADOS = /* @__PURE__ */ new Set(["filePath", "file_path", "path", "notebook_path", "type", "mode", "url", "id"]);
+function ocultarTextos(valor, aviso) {
+  let avisou = false;
+  const visitar = (v, chave) => {
+    if (typeof v === "string") {
+      if (chave !== void 0 && CAMPOS_PRESERVADOS.has(chave)) return v;
+      if (/^[a-z_]{1,20}$/.test(v) || v.length === 0) return v;
+      if (!avisou) {
+        avisou = true;
+        return aviso;
+      }
+      return "[sigilo: ocultado]";
+    }
+    if (Array.isArray(v)) return v.map((x) => visitar(x));
+    if (v && typeof v === "object") {
+      return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, visitar(x, k)]));
+    }
+    return v;
+  };
+  return visitar(valor);
 }
 
 // src/hooks/pre-tool-use.ts
@@ -1785,20 +1799,15 @@ async function preToolUse(entrada) {
   if (!ctx.config.ativo) return null;
   const ferramenta = String(entrada.tool_name ?? "");
   const input = entrada.tool_input ?? {};
-  if (ferramenta === "Read") {
-    const caminho = String(input.file_path ?? "");
-    if (ctx.config.bloquearArquivosBinarios && EXTENSOES_BINARIAS.has(extname(caminho).toLowerCase())) {
-      return negar(
-        "sigilo: PDFs e imagens lidos pelo Read chegam ao modelo sem pseudonimiza\xE7\xE3o. Extraia o texto pelo Bash (por exemplo, `pdftotext arquivo.pdf -`), cuja sa\xEDda \xE9 mascarada, ou pe\xE7a ao usu\xE1rio para desativar a op\xE7\xE3o bloquearArquivosBinarios."
-      );
-    }
-    return null;
-  }
+  const bloquearRead = (caminho) => ferramenta === "Read" && ctx.config.bloquearArquivosBinarios && EXTENSOES_BINARIAS.has(extname(caminho).toLowerCase()) ? negar(
+    "sigilo: PDFs e imagens lidos pelo Read chegam ao modelo sem pseudonimiza\xE7\xE3o. Extraia o texto pelo Bash (por exemplo, `pdftotext arquivo.pdf -`), cuja sa\xEDda \xE9 mascarada, ou pe\xE7a ao usu\xE1rio para desativar a op\xE7\xE3o bloquearArquivosBinarios."
+  ) : null;
   if (ferramenta === "Bash" && !ctx.config.desmascararBash) return null;
   const serializado = JSON.stringify(input);
   PADRAO_TOKEN.lastIndex = 0;
-  if (!PADRAO_TOKEN.test(serializado)) return null;
+  const temToken = PADRAO_TOKEN.test(serializado);
   PADRAO_TOKEN.lastIndex = 0;
+  if (!temToken) return bloquearRead(String(input.file_path ?? ""));
   let cofre;
   try {
     cofre = Cofre.abrir(ctx.projeto);
@@ -1829,6 +1838,8 @@ async function preToolUse(entrada) {
   } else {
     novo = desmascararProfundo(input, cofre);
   }
+  const bloqueio = bloquearRead(String(novo.file_path ?? ""));
+  if (bloqueio) return bloqueio;
   if (JSON.stringify(novo) === serializado) return null;
   const desconhecidos = tokensDesconhecidos(serializado, cofre);
   const saida = {
@@ -1933,13 +1944,7 @@ var HOOKS = {
 function saidaDeFalha(evento, e) {
   const motivo = `sigilo: falha ao processar (${descreverErro(e)})`;
   if (evento === "post-tool-use") {
-    return {
-      systemMessage: motivo,
-      hookSpecificOutput: {
-        hookEventName: "PostToolUse",
-        updatedToolOutput: `[sigilo] A sa\xEDda desta ferramenta foi ocultada por seguran\xE7a (${descreverErro(e)}).`
-      }
-    };
+    return { continue: false, stopReason: `${motivo}. A sess\xE3o foi interrompida para proteger os dados.`, systemMessage: motivo };
   }
   if (evento === "pre-tool-use") {
     return { hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: motivo } };

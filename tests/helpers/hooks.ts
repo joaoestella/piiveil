@@ -21,22 +21,22 @@ export function prepararHooks(): AmbienteHooks {
     ...extra,
   });
   const lerMascarado = async (arquivo: string): Promise<string> => {
-    const saida = (await postToolUse(
-      base("PostToolUse", {
-        tool_name: "Read",
-        tool_input: { file_path: arquivo },
-        tool_output: comoRead(readFileSync(arquivo, "utf8")),
-      }),
-    )) as Qualquer;
-    return saida.hookSpecificOutput.updatedToolOutput as string;
+    const saida = (await postToolUse(base("PostToolUse", entradaRead(arquivo, readFileSync(arquivo, "utf8"))))) as Qualquer;
+    return saida.hookSpecificOutput.updatedToolOutput.file.content as string;
   };
   return { amb, base, lerMascarado };
 }
 
-/** Simula o que o Read mostra ao modelo: linhas numeradas como no cat -n. */
-export function comoRead(texto: string): string {
-  return texto
-    .split("\n")
-    .map((l, i) => `${String(i + 1).padStart(6)}\t${l}`)
-    .join("\n");
+/** Entrada do PostToolUse do Read no formato enviado pelo Claude Code. */
+export function entradaRead(arquivo: string, conteudo: string): Qualquer {
+  const linhas = conteudo.split("\n").length;
+  return {
+    tool_name: "Read",
+    tool_input: { file_path: arquivo },
+    tool_response: {
+      type: "text",
+      file: { filePath: arquivo, content: conteudo, numLines: linhas, startLine: 1, totalLines: linhas },
+    },
+    tool_use_id: "toolu_teste",
+  };
 }
