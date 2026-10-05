@@ -1857,7 +1857,7 @@ async function preToolUse(entrada) {
 // src/hooks/message-display.ts
 import { existsSync as existsSync3 } from "node:fs";
 async function messageDisplay(entrada) {
-  const texto = typeof entrada.message_text === "string" ? entrada.message_text : typeof entrada.text === "string" ? entrada.text : null;
+  const texto = [entrada.delta, entrada.message_text, entrada.text].find((v) => typeof v === "string");
   if (!texto) return null;
   PADRAO_TOKEN.lastIndex = 0;
   if (!PADRAO_TOKEN.test(texto)) return null;

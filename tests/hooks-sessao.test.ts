@@ -22,12 +22,19 @@ describe("MessageDisplay", () => {
     const c = Cofre.abrir(amb.projeto);
     c.tokenPara("Maria Souza", "PESSOA");
     c.salvar();
-    const r = (await messageDisplay(base("MessageDisplay", { message_text: "Resumo: [PESSOA_1] assinou. [PESSOA_5] não.", is_partial: false }))) as Qualquer;
+    const r = (await messageDisplay(base("MessageDisplay", { delta: "Resumo: [PESSOA_1] assinou. [PESSOA_5] não.", index: 0, final: true }))) as Qualquer;
     assert.equal(r.hookSpecificOutput.displayContent, "Resumo: Maria Souza assinou. [PESSOA_5] não.");
   });
   test("sem tokens ou sem cofre, não faz nada", async () => {
-    assert.equal(await messageDisplay(base("MessageDisplay", { message_text: "olá" })), null);
-    assert.equal(await messageDisplay(base("MessageDisplay", { message_text: "[PESSOA_1]" })), null);
+    assert.equal(await messageDisplay(base("MessageDisplay", { delta: "olá" })), null);
+    assert.equal(await messageDisplay(base("MessageDisplay", { delta: "[PESSOA_1]" })), null);
+  });
+  test("aceita message_text, como na documentação", async () => {
+    const c = Cofre.abrir(amb.projeto);
+    c.tokenPara("Maria Souza", "PESSOA");
+    c.salvar();
+    const r = (await messageDisplay(base("MessageDisplay", { message_text: "[PESSOA_1]" }))) as Qualquer;
+    assert.equal(r.hookSpecificOutput.displayContent, "Maria Souza");
   });
 });
 
