@@ -114,11 +114,35 @@ export class Cofre {
     }
   }
 
-  /** Remove o cofre do projeto. Devolve true se havia um. */
-  static limpar(projeto: string, arquivo = caminhoDoCofre(projeto)): boolean {
+  /**
+   * Apaga todos os valores do cofre do projeto. Devolve true se havia um.
+   *
+   * Os contadores são mantidos para que um token novo nunca reaproveite o
+   * número de um token antigo que ainda esteja na conversa: depois de limpar,
+   * [PESSOA_1] antigo fica sem valor em vez de passar a apontar para outra pessoa.
+   * Se o cofre não puder ser decifrado (chave perdida), o arquivo é removido.
+   */
+  static async limpar(projeto: string, arquivo = caminhoDoCofre(projeto)): Promise<boolean> {
     if (!existsSync(arquivo)) return false;
-    rmSync(arquivo, { force: true });
-    return true;
+    const liberar = await travar(arquivo);
+    try {
+      let contadores: Partial<Record<TipoDado, number>> | null = null;
+      try {
+        contadores = Cofre.abrir(projeto, arquivo).contadores;
+      } catch {
+        contadores = null;
+      }
+      if (contadores === null) {
+        rmSync(arquivo, { force: true });
+      } else {
+        const vazio = new Cofre(resolve(projeto), arquivo);
+        vazio.contadores = { ...contadores };
+        vazio.salvar();
+      }
+      return true;
+    } finally {
+      liberar();
+    }
   }
 
   private carregar(c: Conteudo): void {

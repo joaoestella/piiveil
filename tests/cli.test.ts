@@ -43,7 +43,7 @@ describe("linha de comando", () => {
     assert.match(status.stdout, /dados no cofre: 1 \(PESSOA: 1\)/);
     assert.ok(!status.stdout.includes("Maria"), "status não pode exibir valores");
     const limpar = await executar(process.execPath, [cli, "limpar", "--projeto", amb.projeto], { env });
-    assert.match(limpar.stdout, /apagado/);
+    assert.match(limpar.stdout, /apagados/);
     assert.equal(Cofre.abrir(amb.projeto).tamanho, 0);
   });
 });

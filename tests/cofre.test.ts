@@ -97,13 +97,27 @@ describe("cofre", () => {
     assert.throws(() => Cofre.abrir(amb.projeto), ErroCofre);
   });
 
-  test("limpar remove o cofre", () => {
+  test("limpar apaga os valores sem reaproveitar números de token", async () => {
+    assert.equal(await Cofre.limpar(amb.projeto), false);
+    const c = Cofre.abrir(amb.projeto);
+    c.tokenPara("Maria Souza", "PESSOA");
+    c.tokenPara("x", "TERMO");
+    c.salvar();
+    assert.equal(await Cofre.limpar(amb.projeto), true);
+    const depois = Cofre.abrir(amb.projeto);
+    assert.equal(depois.tamanho, 0);
+    assert.equal(depois.valorDe("[PESSOA_1]"), undefined);
+    assert.equal(depois.tokenPara("Outra Pessoa", "PESSOA"), "[PESSOA_2]");
+    assert.ok(!readFileSync(caminhoDoCofre(amb.projeto)).includes(Buffer.from("Maria")));
+  });
+
+  test("limpar remove o arquivo quando ele não pode ser decifrado", async () => {
     const c = Cofre.abrir(amb.projeto);
     c.tokenPara("x", "TERMO");
     c.salvar();
-    assert.equal(Cofre.limpar(amb.projeto), true);
-    assert.equal(Cofre.limpar(amb.projeto), false);
-    assert.equal(Cofre.abrir(amb.projeto).tamanho, 0);
+    writeFileSync(join(amb.home, "chave"), Buffer.alloc(32, 1).toString("base64"));
+    assert.equal(await Cofre.limpar(amb.projeto), true);
+    assert.equal(existsSync(caminhoDoCofre(amb.projeto)), false);
   });
 
   test("trava evita perda de tokens com processos concorrentes", async () => {

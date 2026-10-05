@@ -124,10 +124,10 @@ export async function main(args: string[]): Promise<number> {
       return 0;
     }
     case "limpar": {
-      const havia = Cofre.limpar(projeto);
+      const havia = await Cofre.limpar(projeto);
       process.stdout.write(
         havia
-          ? "sigilo: cofre do projeto apagado. Tokens usados até aqui não serão mais traduzidos.\n"
+          ? "sigilo: valores do cofre apagados. Tokens usados até aqui não serão mais traduzidos e seus números não serão reutilizados.\n"
           : "sigilo: este projeto não tinha cofre.\n",
       );
       return 0;
