@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { Cofre } from "../src/vault/cofre.js";
 import { desmascarar, mascarar } from "../src/pseudonimizar.js";
 import { ambienteTemporario, fixture, FIXTURES } from "./helpers/ambiente.js";
@@ -52,4 +53,22 @@ describe("ida e volta (mascarar -> desmascarar)", () => {
     const c = Cofre.abrir(amb.projeto);
     assert.equal(desmascarar("texto com [PESSOA_99]", c), "texto com [PESSOA_99]");
   });
+});
+
+describe("exemplos da documentação", () => {
+  let amb: ReturnType<typeof ambienteTemporario>;
+  beforeEach(() => {
+    amb = ambienteTemporario();
+  });
+  afterEach(() => amb.limpar());
+
+  for (const nome of ["peticao-inicial.md", "pagamentos.csv"]) {
+    test(`exemplos/${nome} volta idêntico e não expõe CPF, CNPJ nem e-mail`, () => {
+      const original = readFileSync(new URL(`../../exemplos/${nome}`, import.meta.url), "utf8");
+      const c = Cofre.abrir(amb.projeto);
+      const r = mascarar(original, c);
+      assert.equal(desmascarar(r.texto, c), original);
+      assert.doesNotMatch(r.texto, /\d{3}\.\d{3}\.\d{3}-\d{2}|\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}|@exemplo/);
+    });
+  }
 });
