@@ -1,0 +1,107 @@
+import { extname } from "node:path";
+import { Cofre } from "../vault/cofre.js";
+import { PADRAO_TOKEN } from "../detectors/index.js";
+import { escaparRegex } from "../detectors/normalizar.js";
+import { desmascarar, desmascararProfundo, tokensDesconhecidos } from "../pseudonimizar.js";
+import { contexto, descreverErro, type EntradaHook, type SaidaHook } from "./comum.js";
+
+/** Extensões que o Read entrega ao modelo como documento ou imagem, sem texto para os hooks mascararem. */
+export const EXTENSOES_BINARIAS = new Set([".pdf", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".tif", ".tiff", ".heic"]);
+
+/** Caracteres que, dentro de um comando do shell, poderiam quebrar aspas ou executar algo. */
+const PERIGOSOS_NO_SHELL = /[`$\\"'\n\r]/;
+
+function negar(motivo: string): SaidaHook {
+  return {
+    hookSpecificOutput: {
+      hookEventName: "PreToolUse",
+      permissionDecision: "deny",
+      permissionDecisionReason: motivo,
+    },
+  };
+}
+
+/**
+ * PreToolUse:
+ * - Write, Edit, NotebookEdit e Bash: troca tokens pelos valores reais antes
+ *   de executar, para que os arquivos gravados tenham os dados reais;
+ * - Grep: idem no padrão de busca, com os valores escapados para regex;
+ * - Read: bloqueia PDFs e imagens (opcional), que não passam pelo mascaramento.
+ */
+export async function preToolUse(entrada: EntradaHook): Promise<SaidaHook | null> {
+  const ctx = contexto(entrada);
+  if (!ctx.config.ativo) return null;
+  const ferramenta = String(entrada.tool_name ?? "");
+  const input = (entrada.tool_input ?? {}) as Record<string, unknown>;
+
+  if (ferramenta === "Read") {
+    const caminho = String(input.file_path ?? "");
+    if (ctx.config.bloquearArquivosBinarios && EXTENSOES_BINARIAS.has(extname(caminho).toLowerCase())) {
+      return negar(
+        "sigilo: PDFs e imagens lidos pelo Read chegam ao modelo sem pseudonimização. " +
+          "Extraia o texto pelo Bash (por exemplo, `pdftotext arquivo.pdf -`), cuja saída é mascarada, " +
+          "ou peça ao usuário para desativar a opção bloquearArquivosBinarios.",
+      );
+    }
+    return null;
+  }
+
+  if (ferramenta === "Bash" && !ctx.config.desmascararBash) return null;
+
+  const serializado = JSON.stringify(input);
+  PADRAO_TOKEN.lastIndex = 0;
+  if (!PADRAO_TOKEN.test(serializado)) return null;
+  PADRAO_TOKEN.lastIndex = 0;
+
+  let cofre: Cofre;
+  try {
+    cofre = Cofre.abrir(ctx.projeto);
+  } catch (e) {
+    return negar(`sigilo: não foi possível abrir o cofre para restaurar os dados reais (${descreverErro(e)}).`);
+  }
+
+  let novo: Record<string, unknown>;
+  if (ferramenta === "Grep") {
+    novo = { ...input };
+    for (const [campo, valor] of Object.entries(input)) {
+      if (typeof valor !== "string") continue;
+      novo[campo] =
+        campo === "pattern"
+          ? valor.replace(PADRAO_TOKEN, (t) => {
+              const real = cofre.valorDe(t);
+              return real === undefined ? t : escaparRegex(real);
+            })
+          : desmascarar(valor, cofre);
+    }
+  } else if (ferramenta === "Bash") {
+    const comando = String(input.command ?? "");
+    for (const m of comando.matchAll(PADRAO_TOKEN)) {
+      const real = cofre.valorDe(m[0]);
+      if (real !== undefined && PERIGOSOS_NO_SHELL.test(real)) {
+        return negar(
+          `sigilo: o valor de ${m[0]} contém aspas ou caracteres especiais do shell e não pode ser inserido ` +
+            "com segurança no comando. Grave o conteúdo com Write ou Edit em vez de passá-lo pela linha de comando.",
+        );
+      }
+    }
+    novo = desmascararProfundo(input, cofre);
+  } else {
+    novo = desmascararProfundo(input, cofre);
+  }
+
+  if (JSON.stringify(novo) === serializado) return null;
+
+  const desconhecidos = tokensDesconhecidos(serializado, cofre);
+  const saida: SaidaHook = {
+    hookSpecificOutput: {
+      hookEventName: "PreToolUse",
+      updatedInput: novo,
+      ...(desconhecidos.length
+        ? {
+            additionalContext: `sigilo: os tokens ${desconhecidos.join(", ")} não existem no cofre e foram mantidos como texto literal.`,
+          }
+        : {}),
+    },
+  };
+  return saida;
+}
