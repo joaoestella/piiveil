@@ -1,0 +1,31 @@
+# Dependências e saída de compilação
+node_modules/
+build/
+coverage/
+*.tsbuildinfo
+
+# Cofre, chaves e configuração local do sigilo (nunca versionar)
+.sigilo/
+*.cofre
+*.chave
+*.key
+*.pem
+.env
+.env.*
+
+# Arquivos de sessão e rascunho do agente
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+rascunho*/
+scratch/
+*.rascunho.*
+
+# Sistema operacional e editores
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+npm-debug.log*
