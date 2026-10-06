@@ -1,5 +1,5 @@
 ---
-name: status
+name: vault-status
 description: Shows where the piiveil vault for this project is stored and how many personal data items it holds, by type.
 disable-model-invocation: true
 allowed-tools: Bash(node *)

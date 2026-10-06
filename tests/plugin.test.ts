@@ -1,7 +1,7 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { build } from "esbuild";
@@ -38,6 +38,21 @@ describe("pacote do plugin", () => {
     for (const [evento, grupos] of Object.entries(hooks) as Array<[string, Array<{ hooks: Array<{ args: string[] }> }>]>) {
       const args = grupos[0]!.hooks[0]!.args;
       assert.deepEqual(args, ["${CLAUDE_PLUGIN_ROOT}/dist/piiveil.mjs", "hook", eventos[evento]]);
+    }
+  });
+
+  test("comandos do plugin não usam nomes de comandos nativos do Claude Code", () => {
+    // Um /clear ou /status do plugin pode ser chamado no lugar do comando nativo.
+    const nativos = new Set([
+      "add-dir", "agents", "bug", "clear", "compact", "config", "context", "cost", "doctor", "exit", "export", "help",
+      "hooks", "init", "login", "logout", "mcp", "memory", "model", "permissions", "plugin", "pr-comments", "release-notes",
+      "resume", "review", "rewind", "status", "statusline", "terminal-setup", "todos", "usage", "vim",
+    ]);
+    const skills = readdirSync(new URL("skills/", raiz));
+    assert.ok(skills.length > 0);
+    for (const nome of skills) {
+      assert.ok(!nativos.has(nome), `skills/${nome} colide com /${nome}`);
+      assert.match(ler(`skills/${nome}/SKILL.md`), new RegExp(`^name: ${nome}$`, "m"));
     }
   });
 

@@ -47,7 +47,7 @@ describe("UserPromptSubmit", () => {
   test("deixa passar prompt sem dados pessoais, com tokens ou comando de barra", async () => {
     assert.equal(await userPromptSubmit(base("UserPromptSubmit", { prompt: "resuma o contrato" })), null);
     assert.equal(await userPromptSubmit(base("UserPromptSubmit", { prompt: "quem é [PERSON_1]?" })), null);
-    assert.equal(await userPromptSubmit(base("UserPromptSubmit", { prompt: "/piiveil:status" })), null);
+    assert.equal(await userPromptSubmit(base("UserPromptSubmit", { prompt: "/piiveil:vault-status" })), null);
   });
   test("modo warn não bloqueia", async () => {
     mkdirSync(join(amb.projeto, ".piiveil"));

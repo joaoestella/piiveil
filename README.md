@@ -58,7 +58,7 @@ git clone https://github.com/joaoestella/piiveil
 claude --plugin-dir ./piiveil
 ```
 
-Run `/piiveil:status` inside Claude Code to check that it is active.
+Run `/piiveil:vault-status` inside Claude Code to check that it is active.
 
 ## Usage
 
@@ -103,8 +103,8 @@ For long texts, save the content to a file and ask Claude Code to read it: reads
 
 | Command | What it does |
 | :- | :- |
-| `/piiveil:status` | Shows where the project vault is and how many items it holds, by type (never the values). |
-| `/piiveil:clear` | Erases the values in the project vault. Old tokens stop resolving, and their numbers are never reused. |
+| `/piiveil:vault-status` | Shows where the project vault is and how many items it holds, by type (never the values). |
+| `/piiveil:vault-clear` | Erases the values in the project vault. Old tokens stop resolving, and their numbers are never reused. |
 
 The same commands exist on the command line, plus a few that help check detection:
 
@@ -117,6 +117,9 @@ node dist/piiveil.mjs unmask file.txt    # replace tokens with the real values
 ```
 
 Use `--project <folder>` to point to another project.
+
+The slash commands run that same `node` command. If Claude Code asks for permission, or auto mode cannot evaluate
+it at the moment, approve it or run the command in a terminal.
 
 ## What is detected
 
@@ -264,7 +267,7 @@ with `src/`. The source code and comments are in Portuguese; contributions in En
 ```
 .claude-plugin/   plugin.json and marketplace.json
 hooks/hooks.json  hook registration
-skills/           /piiveil:status and /piiveil:clear
+skills/           /piiveil:vault-status and /piiveil:vault-clear
 src/detectors/    detectors, check digit validation and first-name lists (Brazil and US)
 src/vault/        encryption and vault
 src/hooks/        one file per hook

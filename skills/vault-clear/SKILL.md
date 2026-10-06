@@ -1,5 +1,5 @@
 ---
-name: clear
+name: vault-clear
 description: Erases the values in the piiveil vault for this project. Tokens used so far stop resolving to the real values.
 disable-model-invocation: true
 allowed-tools: Bash(node *)

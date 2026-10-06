@@ -59,7 +59,7 @@ git clone https://github.com/joaoestella/piiveil
 claude --plugin-dir ./piiveil
 ```
 
-Para conferir se está ativo, rode `/piiveil:status` dentro do Claude Code.
+Para conferir se está ativo, rode `/piiveil:vault-status` dentro do Claude Code.
 
 ## Uso
 
@@ -102,8 +102,8 @@ mascaramento.
 
 | Comando | O que faz |
 | :- | :- |
-| `/piiveil:status` | Mostra onde fica o cofre do projeto e quantos dados ele guarda, por tipo (sem mostrar valores). |
-| `/piiveil:clear` | Apaga os valores do cofre do projeto. Os tokens antigos deixam de ser traduzidos, e seus números não são reaproveitados. |
+| `/piiveil:vault-status` | Mostra onde fica o cofre do projeto e quantos dados ele guarda, por tipo (sem mostrar valores). |
+| `/piiveil:vault-clear` | Apaga os valores do cofre do projeto. Os tokens antigos deixam de ser traduzidos, e seus números não são reaproveitados. |
 
 Os mesmos comandos existem na linha de comando, junto com outros úteis para conferir a detecção (os nomes em
 português `limpar`, `mascarar` e `desmascarar` também funcionam):
@@ -117,6 +117,9 @@ node dist/piiveil.mjs unmask arquivo.txt   # troca tokens pelos valores reais
 ```
 
 Use `--project <pasta>` (ou `--projeto`) para apontar outro projeto.
+
+Os comandos de barra executam esse mesmo comando `node`. Se o Claude Code pedir permissão, ou se o modo automático
+não conseguir avaliá-lo naquele momento, aprove ou rode o comando num terminal.
 
 ## O que é detectado
 
@@ -264,7 +267,7 @@ ou inglês são bem-vindas.
 ```
 .claude-plugin/   plugin.json e marketplace.json
 hooks/hooks.json  registro dos hooks
-skills/           comandos /piiveil:status e /piiveil:clear
+skills/           comandos /piiveil:vault-status e /piiveil:vault-clear
 src/detectors/    detectores, validação de dígitos e listas de prenomes (Brasil e EUA)
 src/vault/        criptografia e cofre
 src/hooks/        um arquivo por hook
