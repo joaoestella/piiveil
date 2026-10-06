@@ -22,6 +22,12 @@ export interface Config {
   bloquearArquivosBinarios: boolean;
   /** Troca tokens por valores reais também nos comandos do Bash. */
   desmascararBash: boolean;
+  /**
+   * Mostra na tela os valores reais no lugar dos tokens (hook MessageDisplay).
+   * Desligado por padrão: no Claude Code 2.1.291, trocar um trecho do texto em
+   * streaming por outro de tamanho diferente corta partes da resposta na tela.
+   */
+  mostrarValoresReais: boolean;
   /** Idioma das mensagens; "auto" segue a localidade do sistema. */
   idioma: Idioma | "auto";
 }
@@ -37,6 +43,7 @@ export const CONFIG_PADRAO: Config = {
   prompt: "bloquear",
   bloquearArquivosBinarios: true,
   desmascararBash: true,
+  mostrarValoresReais: false,
   idioma: "auto",
 };
 
@@ -75,12 +82,14 @@ const CHAVES: Record<string, keyof Config> = {
   bloquearArquivosBinarios: "bloquearArquivosBinarios",
   unmaskBash: "desmascararBash",
   desmascararBash: "desmascararBash",
+  showRealValues: "mostrarValoresReais",
+  mostrarValoresReais: "mostrarValoresReais",
   language: "idioma",
   idioma: "idioma",
 };
 
 const LISTAS = new Set<keyof Config>(["termos", "nomes", "empresas", "prenomes", "ignorar"]);
-const BOOLEANOS = new Set<keyof Config>(["ativo", "bloquearArquivosBinarios", "desmascararBash"]);
+const BOOLEANOS = new Set<keyof Config>(["ativo", "bloquearArquivosBinarios", "desmascararBash", "mostrarValoresReais"]);
 const COMENTARIOS = new Set(["$comment", "$comentario", "$schema"]);
 
 const MODOS_PROMPT: Record<string, ModoPrompt> = {

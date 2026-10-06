@@ -55,7 +55,7 @@ var pt = {
   promptNaoVerificadoAviso: (erro) => `piiveil: n\xE3o foi poss\xEDvel verificar o prompt (${erro})`,
   promptNaoVerificadoBloqueio: (erro) => `piiveil: n\xE3o foi poss\xEDvel verificar o prompt (${erro}). Ele n\xE3o foi enviado.`,
   promptComDados: (n) => `piiveil: o prompt cont\xE9m ${n} dado(s) pessoal(is) e n\xE3o foi enviado ao modelo.`,
-  promptReescreva: () => "Reescreva usando os tokens abaixo (a resposta mostrar\xE1 os valores reais na tela):",
+  promptReescreva: () => "Reescreva usando os tokens abaixo:",
   promptUseToken: (valor, token) => `  \u2022 "${valor}" \u2192 use ${token}`,
   promptMais: (n) => `  \u2022 \u2026 e mais ${n}`,
   promptArquivo: () => "Para textos longos, salve o conte\xFAdo num arquivo e pe\xE7a para l\xEA-lo: a leitura passa pelo mascaramento.",
@@ -126,7 +126,7 @@ var en = {
   promptNaoVerificadoAviso: (erro) => `piiveil: could not check the prompt (${erro})`,
   promptNaoVerificadoBloqueio: (erro) => `piiveil: could not check the prompt (${erro}). It was not sent.`,
   promptComDados: (n) => `piiveil: the prompt contains ${n} piece(s) of personal data and was not sent to the model.`,
-  promptReescreva: () => "Rewrite it using the tokens below (the reply will show the real values on screen):",
+  promptReescreva: () => "Rewrite it using the tokens below:",
   promptUseToken: (valor, token) => `  \u2022 "${valor}" \u2192 use ${token}`,
   promptMais: (n) => `  \u2022 \u2026 and ${n} more`,
   promptArquivo: () => "For long texts, save the content to a file and ask for it to be read: reads go through masking.",
@@ -499,6 +499,7 @@ var CONFIG_PADRAO = {
   prompt: "bloquear",
   bloquearArquivosBinarios: true,
   desmascararBash: true,
+  mostrarValoresReais: false,
   idioma: "auto"
 };
 function arquivosDeConfig(projeto) {
@@ -524,11 +525,13 @@ var CHAVES = {
   bloquearArquivosBinarios: "bloquearArquivosBinarios",
   unmaskBash: "desmascararBash",
   desmascararBash: "desmascararBash",
+  showRealValues: "mostrarValoresReais",
+  mostrarValoresReais: "mostrarValoresReais",
   language: "idioma",
   idioma: "idioma"
 };
 var LISTAS = /* @__PURE__ */ new Set(["termos", "nomes", "empresas", "prenomes", "ignorar"]);
-var BOOLEANOS = /* @__PURE__ */ new Set(["ativo", "bloquearArquivosBinarios", "desmascararBash"]);
+var BOOLEANOS = /* @__PURE__ */ new Set(["ativo", "bloquearArquivosBinarios", "desmascararBash", "mostrarValoresReais"]);
 var COMENTARIOS = /* @__PURE__ */ new Set(["$comment", "$comentario", "$schema"]);
 var MODOS_PROMPT = {
   block: "bloquear",
@@ -2733,7 +2736,7 @@ async function messageDisplay(entrada) {
   if (!PADRAO_TOKEN.test(texto)) return null;
   PADRAO_TOKEN.lastIndex = 0;
   const ctx = contexto(entrada);
-  if (!ctx.config.ativo || !existsSync3(caminhoDoCofre(ctx.projeto))) return null;
+  if (!ctx.config.ativo || !ctx.config.mostrarValoresReais || !existsSync3(caminhoDoCofre(ctx.projeto))) return null;
   try {
     const cofre = Cofre.abrir(ctx.projeto);
     const exibido = desmascarar(texto, cofre);
@@ -2782,23 +2785,27 @@ async function userPromptSubmit(entrada) {
 }
 
 // src/hooks/session-start.ts
-var INSTRUCOES_MODELO = [
-  "The piiveil plugin is active in this project: personal data in tool outputs has been replaced with tokens",
-  "such as [PERSON_1], [CPF_2], [SSN_1], [COMPANY_1], [EMAIL_3] and [CASE_1].",
-  "Treat each token as the data itself. When writing files, editing or running commands, use the tokens exactly",
-  "as they appear (brackets, uppercase and number included): they are replaced with the real values before",
-  "execution, and the user sees the real values on screen. Do not try to discover, guess or reconstruct the",
-  "original values, do not invent new tokens and do not change a token's number.",
-  "Careful with the Edit tool: it checks that old_string exists in the file before tokens are replaced, so an",
-  "old_string containing tokens is never found. Pick an old_string without tokens (nearby text that identifies",
-  "the location unambiguously); new_string may contain tokens as usual. If no such text exists, rewrite the",
-  "whole file with Write, using the tokens. Keep replying in the user's language."
-].join(" ");
+function instrucoesModelo(telaComValoresReais) {
+  return [
+    "The piiveil plugin is active in this project: personal data in tool outputs has been replaced with tokens",
+    "such as [PERSON_1], [CPF_2], [SSN_1], [COMPANY_1], [EMAIL_3] and [CASE_1].",
+    "Treat each token as the data itself. When writing files, editing or running commands, use the tokens exactly",
+    "as they appear (brackets, uppercase and number included): they are replaced with the real values before",
+    "execution, so files are saved with the real data.",
+    telaComValoresReais ? "The user sees the real values on screen in place of the tokens." : "The user also sees the tokens on screen, so refer to people and documents by their tokens.",
+    "Do not try to discover, guess or reconstruct the original values, do not invent new tokens and do not change",
+    "a token's number.",
+    "Careful with the Edit tool: it checks that old_string exists in the file before tokens are replaced, so an",
+    "old_string containing tokens is never found. Pick an old_string without tokens (nearby text that identifies",
+    "the location unambiguously); new_string may contain tokens as usual. If no such text exists, rewrite the",
+    "whole file with Write, using the tokens. Keep replying in the user's language."
+  ].join(" ");
+}
 async function sessionStart(entrada) {
   const ctx = contexto(entrada);
   if (!ctx.config.ativo) return null;
   const saida = {
-    hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: INSTRUCOES_MODELO }
+    hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: instrucoesModelo(ctx.config.mostrarValoresReais) }
   };
   if (ctx.avisos.length) saida.systemMessage = msg().problemasConfig(ctx.avisos.join("\n"));
   return saida;
@@ -2852,7 +2859,8 @@ var CONFIG_EXEMPLO = {
   disabledTypes: [],
   prompt: "block",
   blockBinaryFiles: true,
-  unmaskBash: true
+  unmaskBash: true,
+  showRealValues: false
 };
 var ALIASES = {
   limpar: "clear",

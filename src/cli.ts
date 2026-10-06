@@ -73,6 +73,7 @@ const CONFIG_EXEMPLO = {
   prompt: "block",
   blockBinaryFiles: true,
   unmaskBash: true,
+  showRealValues: false,
 };
 
 /** Nomes em português aceitos como alternativa aos comandos em inglês. */

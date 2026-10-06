@@ -8,5 +8,6 @@
   "disabledTypes": [],
   "prompt": "block",
   "blockBinaryFiles": true,
-  "unmaskBash": true
+  "unmaskBash": true,
+  "showRealValues": false
 }

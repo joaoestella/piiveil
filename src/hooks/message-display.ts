@@ -7,6 +7,7 @@ import { contexto, type EntradaHook, type SaidaHook } from "./comum.js";
 /**
  * MessageDisplay: mostra ao usuário os valores reais no lugar dos tokens.
  * Só altera a tela; o modelo e a transcrição continuam com os tokens.
+ * Só age com a opção showRealValues ligada (ver Config.mostrarValoresReais).
  *
  * O Claude Code envia o texto em pedaços (`delta`); versões e a documentação
  * também citam `message_text` e `text`, aceitos como alternativa. Um token
@@ -20,7 +21,7 @@ export async function messageDisplay(entrada: EntradaHook): Promise<SaidaHook | 
   PADRAO_TOKEN.lastIndex = 0;
 
   const ctx = contexto(entrada);
-  if (!ctx.config.ativo || !existsSync(caminhoDoCofre(ctx.projeto))) return null;
+  if (!ctx.config.ativo || !ctx.config.mostrarValoresReais || !existsSync(caminhoDoCofre(ctx.projeto))) return null;
   try {
     const cofre = Cofre.abrir(ctx.projeto);
     const exibido = desmascarar(texto, cofre);

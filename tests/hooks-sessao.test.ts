@@ -18,7 +18,18 @@ beforeEach(() => {
 afterEach(() => amb.limpar());
 
 describe("MessageDisplay", () => {
-  test("mostra valores reais só na tela", async () => {
+  const ligar = () => {
+    mkdirSync(join(amb.projeto, ".piiveil"), { recursive: true });
+    writeFileSync(join(amb.projeto, ".piiveil", "config.json"), JSON.stringify({ showRealValues: true }));
+  };
+  test("desligado por padrão: a tela continua com os tokens", async () => {
+    const c = Cofre.abrir(amb.projeto);
+    c.tokenPara("Maria Souza", "PERSON");
+    c.salvar();
+    assert.equal(await messageDisplay(base("MessageDisplay", { delta: "[PERSON_1] assinou", index: 0, final: true })), null);
+  });
+  test("com showRealValues, mostra valores reais só na tela", async () => {
+    ligar();
     const c = Cofre.abrir(amb.projeto);
     c.tokenPara("Maria Souza", "PERSON");
     c.salvar();
@@ -30,6 +41,7 @@ describe("MessageDisplay", () => {
     assert.equal(await messageDisplay(base("MessageDisplay", { delta: "[PERSON_1]" })), null);
   });
   test("aceita message_text, como na documentação", async () => {
+    ligar();
     const c = Cofre.abrir(amb.projeto);
     c.tokenPara("Maria Souza", "PERSON");
     c.salvar();
@@ -64,6 +76,7 @@ describe("SessionStart", () => {
     writeFileSync(join(amb.projeto, ".piiveil", "config.json"), JSON.stringify({ prompt: "talvez" }));
     const r = (await sessionStart(base("SessionStart", { source: "startup" }))) as Qualquer;
     assert.match(r.hookSpecificOutput.additionalContext, /\[PERSON_1\]/);
+    assert.match(r.hookSpecificOutput.additionalContext, /also sees the tokens on screen/);
     assert.match(r.systemMessage, /"prompt"/);
   });
 });
