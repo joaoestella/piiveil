@@ -94,12 +94,35 @@ export interface OpcoesNomes {
   prenomesExtras?: readonly string[];
 }
 
+/** Pronome de tratamento seguido de palavras capitalizadas: o que vem depois é nome, com ou sem prenome conhecido. */
+const APOS_TRATAMENTO = new RegExp(
+  String.raw`(?<![\p{L}])(?:Sr|Sra|Srta|Dr|Dra|Mr|Mrs|Ms|Mx|Miss)\.?[ \u00A0](?<nome>${PALAVRA}(?:[ \u00A0](?:${PARTICULA}[ \u00A0])?${PALAVRA}){0,4})(?![\p{L}\p{N}_])`,
+  "gud",
+);
+
 export function criarDetectorNomes(opcoes: OpcoesNomes = {}) {
   const prenomes = new Set([...PRENOMES, ...PRENOMES_EUA]);
   for (const p of opcoes.prenomesExtras ?? []) prenomes.add(normalizarPalavra(p.trim()));
 
   return function detectarNomes(texto: string): Achado[] {
     const achados: Achado[] = [];
+    for (const m of texto.matchAll(APOS_TRATAMENTO)) {
+      const idx = m.indices?.groups?.nome;
+      if (!idx) continue;
+      const palavras = [...(m.groups?.nome ?? "").matchAll(PALAVRA_SOLTA)].map((p) => ({
+        texto: p[0],
+        inicio: idx[0] + p.index,
+        fim: idx[0] + p.index + p[0].length,
+        particula: RE_PARTICULA.test(p[0]),
+      }));
+      const trecho = dividirEmTrechos(palavras)[0];
+      if (!trecho || trecho[0]?.inicio !== idx[0]) continue;
+      let fim = trecho.length - 1;
+      while (fim > 0 && trecho[fim]?.particula) fim--;
+      const inicio = trecho[0].inicio;
+      const final = (trecho[fim] as Palavra).fim;
+      achados.push({ tipo: "PERSON", inicio, fim: final, valor: texto.slice(inicio, final) });
+    }
     for (const m of texto.matchAll(SEQUENCIA)) {
       const base = m.index;
       const palavras: Palavra[] = [];

@@ -81,6 +81,12 @@ describe("nomes e empresas em inglês", () => {
     assert.deepEqual(achar("as confirmed by Mrs. Patricia yesterday", "PERSON"), ["Patricia"]);
     assert.deepEqual(achar("Dr. Emily Carter, Esq.", "PERSON"), ["Emily Carter"]);
   });
+  test("sobrenome sozinho após pronome de tratamento", () => {
+    assert.deepEqual(achar("Dear Mr. Whitaker, thank you", "PERSON"), ["Whitaker"]);
+    assert.deepEqual(achar("Ms. Alvarez vacated the premises", "PERSON"), ["Alvarez"]);
+    assert.deepEqual(achar("conforme a Sra. Albuquerque informou", "PERSON"), ["Albuquerque"]);
+    assert.deepEqual(achar("Dr. Street was late", "PERSON"), [], "palavra de lugar logo após o tratamento");
+  });
   test("lugares e títulos comuns não viram nomes", () => {
     assert.deepEqual(achar("1200 Market Street, San Francisco", "PERSON"), []);
     assert.deepEqual(achar("Mark As Read", "PERSON"), []);
