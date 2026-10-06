@@ -117,7 +117,8 @@ export function carregarConfig(projeto: string): ConfigCarregada {
     if (!existsSync(arquivo)) continue;
     let bruto: unknown;
     try {
-      bruto = JSON.parse(readFileSync(arquivo, "utf8"));
+      // O Bloco de Notas e o PowerShell costumam gravar UTF-8 com BOM, que o JSON.parse não aceita.
+      bruto = JSON.parse(readFileSync(arquivo, "utf8").replace(/^\uFEFF/, ""));
     } catch {
       problemas.push([arquivo, "json"]);
       continue;

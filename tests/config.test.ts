@@ -69,6 +69,13 @@ describe("configuração", () => {
     assert.equal(avisos.length, 4);
   });
 
+  test("aceita arquivo UTF-8 com BOM, comum no Windows", () => {
+    writeFileSync(join(amb.projeto, ".piiveil", "config.json"), "\uFEFF" + JSON.stringify({ language: "pt-BR", terms: ["X"] }));
+    const { config, avisos } = carregarConfig(amb.projeto);
+    assert.deepEqual(avisos, []);
+    assert.deepEqual(config.termos, ["X"]);
+  });
+
   test("JSON quebrado não derruba o carregamento", () => {
     writeFileSync(join(amb.projeto, ".piiveil", "config.json"), "{ termos: ");
     const { config, avisos } = carregarConfig(amb.projeto);

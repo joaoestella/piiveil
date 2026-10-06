@@ -556,7 +556,7 @@ function carregarConfig(projeto) {
     if (!existsSync2(arquivo)) continue;
     let bruto;
     try {
-      bruto = JSON.parse(readFileSync2(arquivo, "utf8"));
+      bruto = JSON.parse(readFileSync2(arquivo, "utf8").replace(/^\uFEFF/, ""));
     } catch {
       problemas.push([arquivo, "json"]);
       continue;
