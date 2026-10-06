@@ -141,7 +141,7 @@ function extrairNome(texto: string, trecho: Palavra[], prenomes: Set<string>): A
     if (!TRATAMENTO.test(antes)) return null;
   }
   return {
-    tipo: "PESSOA",
+    tipo: "PERSON",
     inicio: primeira.inicio,
     fim: ultima.fim,
     valor: texto.slice(primeira.inicio, ultima.fim),

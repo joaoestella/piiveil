@@ -20,20 +20,20 @@ afterEach(() => amb.limpar());
 describe("MessageDisplay", () => {
   test("mostra valores reais só na tela", async () => {
     const c = Cofre.abrir(amb.projeto);
-    c.tokenPara("Maria Souza", "PESSOA");
+    c.tokenPara("Maria Souza", "PERSON");
     c.salvar();
-    const r = (await messageDisplay(base("MessageDisplay", { delta: "Resumo: [PESSOA_1] assinou. [PESSOA_5] não.", index: 0, final: true }))) as Qualquer;
-    assert.equal(r.hookSpecificOutput.displayContent, "Resumo: Maria Souza assinou. [PESSOA_5] não.");
+    const r = (await messageDisplay(base("MessageDisplay", { delta: "Resumo: [PERSON_1] assinou. [PERSON_5] não.", index: 0, final: true }))) as Qualquer;
+    assert.equal(r.hookSpecificOutput.displayContent, "Resumo: Maria Souza assinou. [PERSON_5] não.");
   });
   test("sem tokens ou sem cofre, não faz nada", async () => {
     assert.equal(await messageDisplay(base("MessageDisplay", { delta: "olá" })), null);
-    assert.equal(await messageDisplay(base("MessageDisplay", { delta: "[PESSOA_1]" })), null);
+    assert.equal(await messageDisplay(base("MessageDisplay", { delta: "[PERSON_1]" })), null);
   });
   test("aceita message_text, como na documentação", async () => {
     const c = Cofre.abrir(amb.projeto);
-    c.tokenPara("Maria Souza", "PESSOA");
+    c.tokenPara("Maria Souza", "PERSON");
     c.salvar();
-    const r = (await messageDisplay(base("MessageDisplay", { message_text: "[PESSOA_1]" }))) as Qualquer;
+    const r = (await messageDisplay(base("MessageDisplay", { message_text: "[PERSON_1]" }))) as Qualquer;
     assert.equal(r.hookSpecificOutput.displayContent, "Maria Souza");
   });
 });
@@ -46,7 +46,7 @@ describe("UserPromptSubmit", () => {
   });
   test("deixa passar prompt sem dados pessoais, com tokens ou comando de barra", async () => {
     assert.equal(await userPromptSubmit(base("UserPromptSubmit", { prompt: "resuma o contrato" })), null);
-    assert.equal(await userPromptSubmit(base("UserPromptSubmit", { prompt: "quem é [PESSOA_1]?" })), null);
+    assert.equal(await userPromptSubmit(base("UserPromptSubmit", { prompt: "quem é [PERSON_1]?" })), null);
     assert.equal(await userPromptSubmit(base("UserPromptSubmit", { prompt: "/piiveil:status" })), null);
   });
   test("modo avisar não bloqueia", async () => {
@@ -63,7 +63,7 @@ describe("SessionStart", () => {
     mkdirSync(join(amb.projeto, ".piiveil"));
     writeFileSync(join(amb.projeto, ".piiveil", "config.json"), JSON.stringify({ prompt: "talvez" }));
     const r = (await sessionStart(base("SessionStart", { source: "startup" }))) as Qualquer;
-    assert.match(r.hookSpecificOutput.additionalContext, /\[PESSOA_1\]/);
+    assert.match(r.hookSpecificOutput.additionalContext, /\[PERSON_1\]/);
     assert.match(r.systemMessage, /"prompt"/);
   });
 });

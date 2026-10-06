@@ -1,17 +1,17 @@
 export const TIPOS = [
-  "PESSOA",
-  "EMPRESA",
+  "PERSON",
+  "COMPANY",
   "CPF",
   "CNPJ",
   "EMAIL",
-  "TELEFONE",
+  "PHONE",
   "CEP",
-  "CARTAO",
-  "PROCESSO",
+  "CARD",
+  "CASE",
   "OAB",
   "PIS",
   "RG",
-  "TERMO",
+  "TERM",
 ] as const;
 
 export type TipoDado = (typeof TIPOS)[number];
@@ -31,19 +31,19 @@ export interface Achado {
  * sobrepõem, vence o de maior prioridade; em caso de empate, o mais longo.
  */
 export const PRIORIDADE: Record<TipoDado, number> = {
-  TERMO: 100,
+  TERM: 100,
   EMAIL: 95,
-  PROCESSO: 90,
+  CASE: 90,
   CNPJ: 85,
   CPF: 80,
-  CARTAO: 75,
+  CARD: 75,
   PIS: 70,
   OAB: 65,
   RG: 60,
   CEP: 55,
-  TELEFONE: 50,
-  EMPRESA: 40,
-  PESSOA: 30,
+  PHONE: 50,
+  COMPANY: 40,
+  PERSON: 30,
 };
 
 export type Detector = (texto: string) => Achado[];

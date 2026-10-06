@@ -1,4 +1,4 @@
-import { PRIORIDADE, type Achado, type Detector, type TipoDado } from "./tipos.js";
+import { PRIORIDADE, TIPOS, type Achado, type Detector, type TipoDado } from "./tipos.js";
 import {
   detectarCartao,
   detectarCEP,
@@ -22,11 +22,11 @@ export * from "./validacao.js";
 export interface OpcoesDeteccao {
   /** Tipos que não devem ser detectados. */
   tiposDesativados?: readonly TipoDado[];
-  /** Termos sempre mascarados como [TERMO_n]. */
+  /** Termos sempre mascarados como [TERM_n]. */
   termos?: readonly string[];
-  /** Nomes de pessoas sempre mascarados como [PESSOA_n]. */
+  /** Nomes de pessoas sempre mascarados como [PERSON_n]. */
   nomes?: readonly string[];
-  /** Razões sociais sempre mascaradas como [EMPRESA_n]. */
+  /** Razões sociais sempre mascaradas como [COMPANY_n]. */
   empresas?: readonly string[];
   /** Prenomes extras para a heurística de nomes. */
   prenomes?: readonly string[];
@@ -39,8 +39,8 @@ export interface OpcoesDeteccao {
 /** Trechos que, por padrão, não são dados pessoais apesar de parecerem nomes. */
 const IGNORAR_PADRAO = ["Maria da Penha", "Claude Code"];
 
-/** Padrão dos tokens gerados pelo piiveil, ex.: [PESSOA_1]. */
-export const PADRAO_TOKEN = /\[(?:PESSOA|EMPRESA|CPF|CNPJ|EMAIL|TELEFONE|CEP|CARTAO|PROCESSO|OAB|PIS|RG|TERMO)_\d+\]/g;
+/** Padrão dos tokens gerados pelo piiveil, ex.: [PERSON_1]. */
+export const PADRAO_TOKEN = new RegExp(String.raw`\[(?:${TIPOS.join("|")})_\d+\]`, "g");
 
 export function criarDetector(opcoes: OpcoesDeteccao = {}): (texto: string) => Achado[] {
   const desativados = new Set(opcoes.tiposDesativados ?? []);
@@ -48,20 +48,20 @@ export function criarDetector(opcoes: OpcoesDeteccao = {}): (texto: string) => A
     ["CPF", detectarCPF],
     ["CNPJ", detectarCNPJ],
     ["EMAIL", detectarEmail],
-    ["TELEFONE", detectarTelefone],
+    ["PHONE", detectarTelefone],
     ["CEP", detectarCEP],
-    ["CARTAO", detectarCartao],
-    ["PROCESSO", detectarProcessoCNJ],
+    ["CARD", detectarCartao],
+    ["CASE", detectarProcessoCNJ],
     ["OAB", detectarOAB],
     ["PIS", detectarPIS],
     ["RG", detectarRG],
-    ["EMPRESA", detectarEmpresas],
-    ["PESSOA", criarDetectorNomes({ prenomesExtras: opcoes.prenomes })],
+    ["COMPANY", detectarEmpresas],
+    ["PERSON", criarDetectorNomes({ prenomesExtras: opcoes.prenomes })],
   ];
   const listas: Detector[] = [
-    criarDetectorTermos(opcoes.termos ?? [], "TERMO"),
-    criarDetectorTermos(opcoes.nomes ?? [], "PESSOA"),
-    criarDetectorTermos(opcoes.empresas ?? [], "EMPRESA"),
+    criarDetectorTermos(opcoes.termos ?? [], "TERM"),
+    criarDetectorTermos(opcoes.nomes ?? [], "PERSON"),
+    criarDetectorTermos(opcoes.empresas ?? [], "COMPANY"),
   ];
   const ignorar = new Set([...IGNORAR_PADRAO, ...(opcoes.ignorar ?? [])].map((t) => normalizarPalavra(t.trim())));
 

@@ -33,7 +33,7 @@ describe("PostToolUse", () => {
     assert.equal(saida.file.numLines, entrada.tool_response.file.numLines);
     assert.equal(saida.file.filePath, arquivo);
     const visto = saida.file.content as string;
-    assert.ok(visto.includes("[PESSOA_1]"));
+    assert.ok(visto.includes("[PERSON_1]"));
     for (const real of ["HELENA MARQUES DE OLIVEIRA", "381.294.057-41", "helena.locadora@exemplo.com.br", "47.281.035/0001-00"]) {
       assert.ok(!visto.includes(real), `vazou: ${real}`);
     }
@@ -64,7 +64,7 @@ describe("PostToolUse", () => {
     const r = (await postToolUse(base("PostToolUse", { tool_name: "Edit", tool_response: resposta }))) as Qualquer;
     const s = JSON.stringify(r.hookSpecificOutput.updatedToolOutput);
     assert.ok(!s.includes("Rafael") && !s.includes("704.518.236-80"));
-    assert.equal(r.hookSpecificOutput.updatedToolOutput.structuredPatch[0].lines[1], "+[PESSOA_1], casado");
+    assert.equal(r.hookSpecificOutput.updatedToolOutput.structuredPatch[0].lines[1], "+[PERSON_1], casado");
     assert.equal(r.hookSpecificOutput.updatedToolOutput.userModified, false);
   });
 
@@ -80,12 +80,12 @@ describe("PostToolUse", () => {
     const glob = (await postToolUse(
       base("PostToolUse", { tool_name: "Glob", tool_response: { filenames: ["docs/Laudo Maria Clara Souza.txt", "docs/outro.txt"], numFiles: 2 } }),
     )) as Qualquer;
-    assert.deepEqual(glob.hookSpecificOutput.updatedToolOutput.filenames, ["docs/Laudo [PESSOA_1].txt", "docs/outro.txt"]);
+    assert.deepEqual(glob.hookSpecificOutput.updatedToolOutput.filenames, ["docs/Laudo [PERSON_1].txt", "docs/outro.txt"]);
   });
 
   test("aceita tool_output em texto, como na documentação", async () => {
     const r = (await postToolUse(base("PostToolUse", { tool_name: "Bash", tool_output: "Sr. João Batista Lima" }))) as Qualquer;
-    assert.equal(r.hookSpecificOutput.updatedToolOutput, "Sr. [PESSOA_1]");
+    assert.equal(r.hookSpecificOutput.updatedToolOutput, "Sr. [PERSON_1]");
   });
 
   test("saída de MCP em lista de blocos de texto", async () => {
@@ -122,7 +122,7 @@ describe("PostToolUse", () => {
     mkdirSync(join(amb.projeto, ".piiveil"));
     writeFileSync(join(amb.projeto, ".piiveil", "config.json"), JSON.stringify({ termos: ["Operação Aurora Boreal"] }));
     const r = (await postToolUse(base("PostToolUse", { tool_name: "Grep", tool_output: "ata.txt: Operação Aurora Boreal" }))) as Qualquer;
-    assert.equal(r.hookSpecificOutput.updatedToolOutput, "ata.txt: [TERMO_1]");
+    assert.equal(r.hookSpecificOutput.updatedToolOutput, "ata.txt: [TERM_1]");
   });
 });
 
@@ -135,7 +135,7 @@ describe("PreToolUse", () => {
 
     // O modelo escolhe um trecho do que viu e o reescreve.
     const oldString = visto.split("\n").find((l) => l.includes("LOCATÁRIO:"))!;
-    assert.ok(oldString.includes("[PESSOA_"), "o trecho deve conter tokens");
+    assert.ok(oldString.includes("[PERSON_"), "o trecho deve conter tokens");
     const newString = oldString.replace("solteiro", "casado");
 
     const r = (await preToolUse(
@@ -165,7 +165,7 @@ describe("PreToolUse", () => {
     const r = (await preToolUse(
       base("PreToolUse", {
         tool_name: "Edit",
-        tool_input: { file_path: arquivo, old_string: "Testemunhas:", new_string: "Testemunhas (ver [PESSOA_2]):", replace_all: false },
+        tool_input: { file_path: arquivo, old_string: "Testemunhas:", new_string: "Testemunhas (ver [PERSON_2]):", replace_all: false },
       }),
     )) as Qualquer;
     assert.equal(r.hookSpecificOutput.updatedInput.old_string, "Testemunhas:");
@@ -174,13 +174,13 @@ describe("PreToolUse", () => {
 
   test("Write: grava os valores reais", async () => {
     const c = Cofre.abrir(amb.projeto);
-    c.tokenPara("Maria Souza", "PESSOA");
+    c.tokenPara("Maria Souza", "PERSON");
     c.tokenPara("111.444.777-35", "CPF");
     c.salvar();
     const r = (await preToolUse(
       base("PreToolUse", {
         tool_name: "Write",
-        tool_input: { file_path: join(amb.projeto, "resumo.md"), content: "# Resumo\n[PESSOA_1], CPF [CPF_1]." },
+        tool_input: { file_path: join(amb.projeto, "resumo.md"), content: "# Resumo\n[PERSON_1], CPF [CPF_1]." },
       }),
     )) as Qualquer;
     assert.equal(r.hookSpecificOutput.updatedInput.content, "# Resumo\nMaria Souza, CPF 111.444.777-35.");
@@ -202,12 +202,12 @@ describe("PreToolUse", () => {
 
   test("Bash: troca tokens no comando e recusa valores com aspas", async () => {
     const c = Cofre.abrir(amb.projeto);
-    c.tokenPara("Maria Souza", "PESSOA");
-    c.tokenPara("Joana D'Arc Silva", "PESSOA");
+    c.tokenPara("Maria Souza", "PERSON");
+    c.tokenPara("Joana D'Arc Silva", "PERSON");
     c.salvar();
-    const ok = (await preToolUse(base("PreToolUse", { tool_name: "Bash", tool_input: { command: 'grep -rn "[PESSOA_1]" docs/' } }))) as Qualquer;
+    const ok = (await preToolUse(base("PreToolUse", { tool_name: "Bash", tool_input: { command: 'grep -rn "[PERSON_1]" docs/' } }))) as Qualquer;
     assert.equal(ok.hookSpecificOutput.updatedInput.command, 'grep -rn "Maria Souza" docs/');
-    const negado = (await preToolUse(base("PreToolUse", { tool_name: "Bash", tool_input: { command: "echo '[PESSOA_2]'" } }))) as Qualquer;
+    const negado = (await preToolUse(base("PreToolUse", { tool_name: "Bash", tool_input: { command: "echo '[PERSON_2]'" } }))) as Qualquer;
     assert.equal(negado.hookSpecificOutput.permissionDecision, "deny");
   });
 
@@ -224,18 +224,18 @@ describe("PreToolUse", () => {
   });
 
   test("tokens desconhecidos são mantidos e não alteram a entrada", async () => {
-    assert.equal(await preToolUse(base("PreToolUse", { tool_name: "Write", tool_input: { file_path: "a", content: "[PESSOA_7]" } })), null);
+    assert.equal(await preToolUse(base("PreToolUse", { tool_name: "Write", tool_input: { file_path: "a", content: "[PERSON_7]" } })), null);
   });
 
   test("Read e Glob: caminhos com tokens voltam ao nome real", async () => {
     const c = Cofre.abrir(amb.projeto);
-    c.tokenPara("Maria Clara Souza", "PESSOA");
+    c.tokenPara("Maria Clara Souza", "PERSON");
     c.salvar();
-    const read = (await preToolUse(base("PreToolUse", { tool_name: "Read", tool_input: { file_path: "/docs/Laudo [PESSOA_1].txt" } }))) as Qualquer;
+    const read = (await preToolUse(base("PreToolUse", { tool_name: "Read", tool_input: { file_path: "/docs/Laudo [PERSON_1].txt" } }))) as Qualquer;
     assert.equal(read.hookSpecificOutput.updatedInput.file_path, "/docs/Laudo Maria Clara Souza.txt");
-    const pdf = (await preToolUse(base("PreToolUse", { tool_name: "Read", tool_input: { file_path: "/docs/Laudo [PESSOA_1].pdf" } }))) as Qualquer;
+    const pdf = (await preToolUse(base("PreToolUse", { tool_name: "Read", tool_input: { file_path: "/docs/Laudo [PERSON_1].pdf" } }))) as Qualquer;
     assert.equal(pdf.hookSpecificOutput.permissionDecision, "deny");
-    const glob = (await preToolUse(base("PreToolUse", { tool_name: "Glob", tool_input: { pattern: "**/*[PESSOA_1]*" } }))) as Qualquer;
+    const glob = (await preToolUse(base("PreToolUse", { tool_name: "Glob", tool_input: { pattern: "**/*[PERSON_1]*" } }))) as Qualquer;
     assert.equal(glob.hookSpecificOutput.updatedInput.pattern, "**/*Maria Clara Souza*");
   });
 

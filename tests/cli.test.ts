@@ -36,17 +36,17 @@ describe("linha de comando", () => {
     filho.stdout!.on("data", (d) => (saida += d));
     filho.stdin!.end(JSON.stringify({ hook_event_name: "PostToolUse", tool_name: "Bash", tool_response: { stdout: "fone (11) 98765-4321", stderr: "", interrupted: false } }));
     await new Promise((r) => filho.on("close", r));
-    assert.deepEqual(JSON.parse(saida).hookSpecificOutput.updatedToolOutput, { stdout: "fone [TELEFONE_1]", stderr: "", interrupted: false });
+    assert.deepEqual(JSON.parse(saida).hookSpecificOutput.updatedToolOutput, { stdout: "fone [PHONE_1]", stderr: "", interrupted: false });
   });
 
   test("status e limpar", async () => {
     const cli = fileURLToPath(new URL("../src/cli.js", import.meta.url));
     const env = { ...process.env, PIIVEIL_HOME: amb.home };
     const c = Cofre.abrir(amb.projeto);
-    c.tokenPara("Maria Souza", "PESSOA");
+    c.tokenPara("Maria Souza", "PERSON");
     c.salvar();
     const status = await executar(process.execPath, [cli, "status", "--projeto", amb.projeto], { env });
-    assert.match(status.stdout, /dados no cofre: 1 \(PESSOA: 1\)/);
+    assert.match(status.stdout, /dados no cofre: 1 \(PERSON: 1\)/);
     assert.ok(!status.stdout.includes("Maria"), "status não pode exibir valores");
     const limpar = await executar(process.execPath, [cli, "limpar", "--projeto", amb.projeto], { env });
     assert.match(limpar.stdout, /apagados/);

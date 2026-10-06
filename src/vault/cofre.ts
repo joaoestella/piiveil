@@ -119,7 +119,7 @@ export class Cofre {
    *
    * Os contadores são mantidos para que um token novo nunca reaproveite o
    * número de um token antigo que ainda esteja na conversa: depois de limpar,
-   * [PESSOA_1] antigo fica sem valor em vez de passar a apontar para outra pessoa.
+   * [PERSON_1] antigo fica sem valor em vez de passar a apontar para outra pessoa.
    * Se o cofre não puder ser decifrado (chave perdida), o arquivo é removido.
    */
   static async limpar(projeto: string, arquivo = caminhoDoCofre(projeto)): Promise<boolean> {

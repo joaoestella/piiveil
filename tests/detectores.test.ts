@@ -53,17 +53,17 @@ describe("e-mail", () => {
 describe("telefone", () => {
   test("detecta formatos comuns", () => {
     for (const t of ["(11) 98765-4321", "+55 21 3456-7890", "11 98765-4321", "(48)3333-2222", "11987654321", "+55 (31) 9 8888-7777"]) {
-      assert.deepEqual(achar(`ligue ${t} amanhã`, "TELEFONE"), [t], t);
+      assert.deepEqual(achar(`ligue ${t} amanhã`, "PHONE"), [t], t);
     }
   });
   test("sem DDD só com palavra-chave", () => {
-    assert.deepEqual(achar("Tel.: 3456-7890", "TELEFONE"), ["3456-7890"]);
-    assert.deepEqual(achar("vigência 2024-2025", "TELEFONE"), []);
+    assert.deepEqual(achar("Tel.: 3456-7890", "PHONE"), ["3456-7890"]);
+    assert.deepEqual(achar("vigência 2024-2025", "PHONE"), []);
   });
   test("ignora DDD inexistente e números soltos", () => {
-    assert.deepEqual(achar("(10) 98765-4321", "TELEFONE"), []);
-    assert.deepEqual(achar("pedido 12345678", "TELEFONE"), []);
-    assert.deepEqual(achar("total 1234567890", "TELEFONE"), []);
+    assert.deepEqual(achar("(10) 98765-4321", "PHONE"), []);
+    assert.deepEqual(achar("pedido 12345678", "PHONE"), []);
+    assert.deepEqual(achar("total 1234567890", "PHONE"), []);
   });
 });
 
@@ -81,22 +81,22 @@ describe("CEP", () => {
 describe("cartão", () => {
   test("detecta agrupado e corrido", () => {
     const n = gerarCartao("552233445566778");
-    assert.deepEqual(achar(`cartão ${agrupar4(n)} validade`, "CARTAO"), [agrupar4(n)]);
-    assert.deepEqual(achar(`cartão ${agrupar4(n, "-")}`, "CARTAO"), [agrupar4(n, "-")]);
-    assert.deepEqual(achar(`cartão ${n}`, "CARTAO"), [n]);
+    assert.deepEqual(achar(`cartão ${agrupar4(n)} validade`, "CARD"), [agrupar4(n)]);
+    assert.deepEqual(achar(`cartão ${agrupar4(n, "-")}`, "CARD"), [agrupar4(n, "-")]);
+    assert.deepEqual(achar(`cartão ${n}`, "CARD"), [n]);
   });
   test("ignora Luhn inválido", () => {
-    assert.deepEqual(achar("4111 1111 1111 1112", "CARTAO"), []);
+    assert.deepEqual(achar("4111 1111 1111 1112", "CARD"), []);
   });
 });
 
 describe("processo CNJ", () => {
   test("detecta formatado", () => {
     const p = gerarProcesso("0001234", "2024", "8", "26", "0100");
-    assert.deepEqual(tipos(`Processo nº ${p}, 2ª Vara`), [`PROCESSO:${p}`]);
+    assert.deepEqual(tipos(`Processo nº ${p}, 2ª Vara`), [`CASE:${p}`]);
   });
   test("ignora DV errado", () => {
-    assert.deepEqual(achar("Processo 0001234-00.2024.8.26.0100", "PROCESSO"), []);
+    assert.deepEqual(achar("Processo 0001234-00.2024.8.26.0100", "CASE"), []);
   });
 });
 
@@ -139,31 +139,31 @@ describe("RG", () => {
 
 describe("nomes de pessoas", () => {
   test("nome com partículas e caixa alta", () => {
-    assert.deepEqual(achar("O contrato foi assinado por Maria da Silva Souza ontem.", "PESSOA"), ["Maria da Silva Souza"]);
-    assert.deepEqual(achar("CONTRATANTE: JOÃO PEDRO DOS SANTOS, brasileiro", "PESSOA"), ["JOÃO PEDRO DOS SANTOS"]);
+    assert.deepEqual(achar("O contrato foi assinado por Maria da Silva Souza ontem.", "PERSON"), ["Maria da Silva Souza"]);
+    assert.deepEqual(achar("CONTRATANTE: JOÃO PEDRO DOS SANTOS, brasileiro", "PERSON"), ["JOÃO PEDRO DOS SANTOS"]);
   });
   test("separa qualificação e cargo", () => {
-    assert.deepEqual(achar("Contratante Ana Beatriz Ramos Brasileira", "PESSOA"), ["Ana Beatriz Ramos"]);
+    assert.deepEqual(achar("Contratante Ana Beatriz Ramos Brasileira", "PERSON"), ["Ana Beatriz Ramos"]);
   });
   test("prenome sozinho só com pronome de tratamento", () => {
-    assert.deepEqual(achar("Conversei com Maria ontem.", "PESSOA"), []);
-    assert.deepEqual(achar("Atendido pela Dra. Helena na clínica.", "PESSOA"), ["Helena"]);
+    assert.deepEqual(achar("Conversei com Maria ontem.", "PERSON"), []);
+    assert.deepEqual(achar("Atendido pela Dra. Helena na clínica.", "PERSON"), ["Helena"]);
   });
   test("falsos positivos comuns: lugares, instituições e leis", () => {
-    assert.deepEqual(achar("Comarca de São Paulo, Estado de Santa Catarina", "PESSOA"), []);
-    assert.deepEqual(achar("na Rua Paulo Freire, 100", "PESSOA"), []);
-    assert.deepEqual(achar("Tribunal de Justiça do Estado de São Paulo", "PESSOA"), []);
-    assert.deepEqual(achar("nos termos da Lei Maria da Penha", "PESSOA"), []);
-    assert.deepEqual(achar("São José dos Campos", "PESSOA"), []);
+    assert.deepEqual(achar("Comarca de São Paulo, Estado de Santa Catarina", "PERSON"), []);
+    assert.deepEqual(achar("na Rua Paulo Freire, 100", "PERSON"), []);
+    assert.deepEqual(achar("Tribunal de Justiça do Estado de São Paulo", "PERSON"), []);
+    assert.deepEqual(achar("nos termos da Lei Maria da Penha", "PERSON"), []);
+    assert.deepEqual(achar("São José dos Campos", "PERSON"), []);
   });
   test("dois nomes ligados por 'e' viram dois achados", () => {
-    assert.deepEqual(achar("Testemunhas: Carlos Alberto Nunes e Fernanda Lima Rocha.", "PESSOA"), [
+    assert.deepEqual(achar("Testemunhas: Carlos Alberto Nunes e Fernanda Lima Rocha.", "PERSON"), [
       "Carlos Alberto Nunes",
       "Fernanda Lima Rocha",
     ]);
   });
   test("colunas de assinatura separadas por vários espaços viram nomes distintos", () => {
-    assert.deepEqual(achar("HELENA MARQUES DE OLIVEIRA          Rafael Augusto Nogueira", "PESSOA"), [
+    assert.deepEqual(achar("HELENA MARQUES DE OLIVEIRA          Rafael Augusto Nogueira", "PERSON"), [
       "HELENA MARQUES DE OLIVEIRA",
       "Rafael Augusto Nogueira",
     ]);
@@ -172,30 +172,30 @@ describe("nomes de pessoas", () => {
     const d = criarDetector({ prenomes: ["Kauê"], nomes: ["Zuleide Pimenta"] });
     assert.deepEqual(
       d("Kauê Andrade e zuleide pimenta").map((a) => `${a.tipo}:${a.valor}`),
-      ["PESSOA:Kauê Andrade", "PESSOA:zuleide pimenta"],
+      ["PERSON:Kauê Andrade", "PERSON:zuleide pimenta"],
     );
   });
 });
 
 describe("empresas", () => {
   test("razões sociais com sufixo", () => {
-    assert.deepEqual(achar("A contratada Alfa Comércio de Alimentos Ltda. sediada", "EMPRESA"), ["Alfa Comércio de Alimentos Ltda."]);
-    assert.deepEqual(achar("Banco Fictício Beta S.A., instituição", "EMPRESA"), ["Banco Fictício Beta S.A."]);
-    assert.deepEqual(achar("GAMA SERVIÇOS EIRELI", "EMPRESA"), ["GAMA SERVIÇOS EIRELI"]);
-    assert.deepEqual(achar("Padaria Pão Quente - ME", "EMPRESA"), ["Padaria Pão Quente - ME"]);
+    assert.deepEqual(achar("A contratada Alfa Comércio de Alimentos Ltda. sediada", "COMPANY"), ["Alfa Comércio de Alimentos Ltda."]);
+    assert.deepEqual(achar("Banco Fictício Beta S.A., instituição", "COMPANY"), ["Banco Fictício Beta S.A."]);
+    assert.deepEqual(achar("GAMA SERVIÇOS EIRELI", "COMPANY"), ["GAMA SERVIÇOS EIRELI"]);
+    assert.deepEqual(achar("Padaria Pão Quente - ME", "COMPANY"), ["Padaria Pão Quente - ME"]);
   });
   test("vence a heurística de nomes quando a razão social contém um nome", () => {
-    assert.deepEqual(tipos("José Carlos Ferreira Transportes Ltda"), ["EMPRESA:José Carlos Ferreira Transportes Ltda"]);
+    assert.deepEqual(tipos("José Carlos Ferreira Transportes Ltda"), ["COMPANY:José Carlos Ferreira Transportes Ltda"]);
   });
   test("ignora sufixo ambíguo com uma palavra só", () => {
-    assert.deepEqual(achar("CHAME ME", "EMPRESA"), []);
+    assert.deepEqual(achar("CHAME ME", "COMPANY"), []);
   });
 });
 
 describe("termos, ignorados e tokens", () => {
-  test("termos do usuário viram TERMO", () => {
+  test("termos do usuário viram TERM", () => {
     const d = criarDetector({ termos: ["Projeto Fênix"] });
-    assert.deepEqual(d("o projeto fênix começa").map((a) => `${a.tipo}:${a.valor}`), ["TERMO:projeto fênix"]);
+    assert.deepEqual(d("o projeto fênix começa").map((a) => `${a.tipo}:${a.valor}`), ["TERM:projeto fênix"]);
   });
   test("lista de ignorados", () => {
     const d = criarDetector({ ignorar: ["Paulo Freire"] });
@@ -206,7 +206,7 @@ describe("termos, ignorados e tokens", () => {
     assert.deepEqual(d("a@b.com.br").length, 0);
   });
   test("não detecta dentro de tokens já existentes", () => {
-    assert.deepEqual(detectar("[PESSOA_1] e [EMPRESA_2] assinaram"), []);
+    assert.deepEqual(detectar("[PERSON_1] e [COMPANY_2] assinaram"), []);
   });
 });
 
@@ -221,12 +221,12 @@ describe("documento misto", () => {
       `CONTRATADA: Delta Tecnologia Ltda, CNPJ ${cnpj}.`,
     ].join("\n");
     assert.deepEqual(tipos(texto), [
-      "PESSOA:Mariana Albuquerque Teixeira",
+      "PERSON:Mariana Albuquerque Teixeira",
       `CPF:${cpf}`,
       "EMAIL:mariana.teste@exemplo.com.br",
-      "TELEFONE:(21) 99876-5432",
+      "PHONE:(21) 99876-5432",
       "CEP:22041-001",
-      "EMPRESA:Delta Tecnologia Ltda",
+      "COMPANY:Delta Tecnologia Ltda",
       `CNPJ:${cnpj}`,
     ]);
   });

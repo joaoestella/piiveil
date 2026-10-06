@@ -67,7 +67,7 @@ export function detectarTelefone(texto: string): Achado[] {
   const rx = re(
     String.raw`(?<int>\+\s?55[\s.-]?)?(?:(?:\((?<ddd1>0?\d{2})\)|(?<ddd2>0?\d{2}))(?<sep1>[\s.-]?))?(?<a>(?:9[\s.]?)?\d{4})(?<sep2>[\s.-]?)(?<b>\d{4})`,
   );
-  return coletar(texto, rx, "TELEFONE", (m) => {
+  return coletar(texto, rx, "PHONE", (m) => {
     const g = m.groups ?? {};
     const dddBruto = g.ddd1 ?? g.ddd2;
     const ddd = dddBruto ? dddBruto.replace(/^0/, "") : undefined;
@@ -101,9 +101,9 @@ export function detectarCartao(texto: string): Achado[] {
   const amex = re(String.raw`\d{4}(?<s>[ -])\d{6}\k<s>\d{4,5}`);
   const corrido = re(String.raw`\d{13,19}`);
   return [
-    ...coletar(texto, agrupado, "CARTAO", (m) => validarCartao(m[0])),
-    ...coletar(texto, amex, "CARTAO", (m) => validarCartao(m[0])),
-    ...coletar(texto, corrido, "CARTAO", (m) => validarCartao(m[0])),
+    ...coletar(texto, agrupado, "CARD", (m) => validarCartao(m[0])),
+    ...coletar(texto, amex, "CARD", (m) => validarCartao(m[0])),
+    ...coletar(texto, corrido, "CARD", (m) => validarCartao(m[0])),
   ];
 }
 
@@ -111,8 +111,8 @@ export function detectarProcessoCNJ(texto: string): Achado[] {
   const formatado = re(String.raw`\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}`);
   const corrido = re(String.raw`\d{20}`);
   return [
-    ...coletar(texto, formatado, "PROCESSO", (m) => validarProcessoCNJ(m[0])),
-    ...coletar(texto, corrido, "PROCESSO", (m) => validarProcessoCNJ(m[0])),
+    ...coletar(texto, formatado, "CASE", (m) => validarProcessoCNJ(m[0])),
+    ...coletar(texto, corrido, "CASE", (m) => validarProcessoCNJ(m[0])),
   ];
 }
 

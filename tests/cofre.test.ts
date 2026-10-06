@@ -52,30 +52,30 @@ describe("cofre", () => {
 
   test("mesmo valor recebe sempre o mesmo token; tipos diferentes têm contadores próprios", () => {
     const c = Cofre.abrir(amb.projeto);
-    assert.equal(c.tokenPara("Maria Souza", "PESSOA"), "[PESSOA_1]");
-    assert.equal(c.tokenPara("João Lima", "PESSOA"), "[PESSOA_2]");
-    assert.equal(c.tokenPara("Maria Souza", "PESSOA"), "[PESSOA_1]");
+    assert.equal(c.tokenPara("Maria Souza", "PERSON"), "[PERSON_1]");
+    assert.equal(c.tokenPara("João Lima", "PERSON"), "[PERSON_2]");
+    assert.equal(c.tokenPara("Maria Souza", "PERSON"), "[PERSON_1]");
     assert.equal(c.tokenPara("111.444.777-35", "CPF"), "[CPF_1]");
-    assert.equal(c.valorDe("[PESSOA_2]"), "João Lima");
-    assert.equal(c.valorDe("[PESSOA_9]"), undefined);
+    assert.equal(c.valorDe("[PERSON_2]"), "João Lima");
+    assert.equal(c.valorDe("[PERSON_9]"), undefined);
   });
 
   test("persiste cifrado, fora da pasta do projeto, e reabre com os mesmos tokens", () => {
     const c = Cofre.abrir(amb.projeto);
-    c.tokenPara("Maria Souza", "PESSOA");
+    c.tokenPara("Maria Souza", "PERSON");
     c.salvar();
     const arquivo = caminhoDoCofre(amb.projeto);
     assert.ok(existsSync(arquivo));
     assert.ok(!resolve(arquivo).startsWith(resolve(amb.projeto)));
     assert.ok(!readFileSync(arquivo).includes(Buffer.from("Maria")));
     const reaberto = Cofre.abrir(amb.projeto);
-    assert.equal(reaberto.tokenPara("Maria Souza", "PESSOA"), "[PESSOA_1]");
-    assert.equal(reaberto.tokenPara("Outra Pessoa", "PESSOA"), "[PESSOA_2]");
+    assert.equal(reaberto.tokenPara("Maria Souza", "PERSON"), "[PERSON_1]");
+    assert.equal(reaberto.tokenPara("Outra Pessoa", "PERSON"), "[PERSON_2]");
   });
 
   test("cria a chave com permissão restrita", { skip: process.platform === "win32" }, () => {
     const c = Cofre.abrir(amb.projeto);
-    c.tokenPara("x", "TERMO");
+    c.tokenPara("x", "TERM");
     c.salvar();
     const modo = statSync(join(amb.home, "chave")).mode & 0o777;
     assert.equal(modo, 0o600);
@@ -83,7 +83,7 @@ describe("cofre", () => {
 
   test("projetos diferentes têm cofres diferentes", () => {
     const a = Cofre.abrir(amb.projeto);
-    a.tokenPara("Valor A", "TERMO");
+    a.tokenPara("Valor A", "TERM");
     a.salvar();
     const b = Cofre.abrir(amb.projeto + "-outro");
     assert.equal(b.tamanho, 0);
@@ -91,7 +91,7 @@ describe("cofre", () => {
 
   test("falha de forma clara com chave errada", () => {
     const c = Cofre.abrir(amb.projeto);
-    c.tokenPara("x", "TERMO");
+    c.tokenPara("x", "TERM");
     c.salvar();
     writeFileSync(join(amb.home, "chave"), Buffer.alloc(32, 1).toString("base64"));
     assert.throws(() => Cofre.abrir(amb.projeto), ErroCofre);
@@ -100,20 +100,20 @@ describe("cofre", () => {
   test("limpar apaga os valores sem reaproveitar números de token", async () => {
     assert.equal(await Cofre.limpar(amb.projeto), false);
     const c = Cofre.abrir(amb.projeto);
-    c.tokenPara("Maria Souza", "PESSOA");
-    c.tokenPara("x", "TERMO");
+    c.tokenPara("Maria Souza", "PERSON");
+    c.tokenPara("x", "TERM");
     c.salvar();
     assert.equal(await Cofre.limpar(amb.projeto), true);
     const depois = Cofre.abrir(amb.projeto);
     assert.equal(depois.tamanho, 0);
-    assert.equal(depois.valorDe("[PESSOA_1]"), undefined);
-    assert.equal(depois.tokenPara("Outra Pessoa", "PESSOA"), "[PESSOA_2]");
+    assert.equal(depois.valorDe("[PERSON_1]"), undefined);
+    assert.equal(depois.tokenPara("Outra Pessoa", "PERSON"), "[PERSON_2]");
     assert.ok(!readFileSync(caminhoDoCofre(amb.projeto)).includes(Buffer.from("Maria")));
   });
 
   test("limpar remove o arquivo quando ele não pode ser decifrado", async () => {
     const c = Cofre.abrir(amb.projeto);
-    c.tokenPara("x", "TERMO");
+    c.tokenPara("x", "TERM");
     c.salvar();
     writeFileSync(join(amb.home, "chave"), Buffer.alloc(32, 1).toString("base64"));
     assert.equal(await Cofre.limpar(amb.projeto), true);

@@ -1,7 +1,7 @@
 # piiveil
 
 Plugin para o [Claude Code](https://code.claude.com) que faz **pseudonimização reversível** de dados pessoais.
-O modelo trabalha com tokens como `[PESSOA_1]`, `[CPF_1]` e `[EMPRESA_1]`; você continua vendo os dados reais
+O modelo trabalha com tokens como `[PERSON_1]`, `[CPF_1]` e `[COMPANY_1]`; você continua vendo os dados reais
 na tela, e os arquivos que o Claude Code grava saem com os dados reais.
 
 O foco são documentos brasileiros (contratos, laudos, peças jurídicas, planilhas financeiras) e a redução da
@@ -17,10 +17,10 @@ causa do piiveil, e o mapa entre tokens e valores fica num cofre cifrado no seu 
 ```
  arquivo no disco                      o que o modelo vê                 o que você vê / o que é gravado
  ───────────────────                   ─────────────────                 ───────────────────────────────
- Maria da Silva Souza,     Read ──►    [PESSOA_1],            resposta ──►   Maria da Silva Souza,
+ Maria da Silva Souza,     Read ──►    [PERSON_1],            resposta ──►   Maria da Silva Souza,
  CPF 111.444.777-35        (mascara)   CPF [CPF_1]            (tela)         CPF 111.444.777-35
 
-                                       Write "[PESSOA_1]" ──► (desmascara) ──► arquivo com "Maria da Silva Souza"
+                                       Write "[PERSON_1]" ──► (desmascara) ──► arquivo com "Maria da Silva Souza"
 ```
 
 O piiveil usa os hooks do Claude Code:
@@ -75,13 +75,13 @@ CPFs reais. Na tela, a resposta aparece com os valores reais.
 Veja o que o modelo recebe a partir de [`exemplos/peticao-inicial.md`](exemplos/peticao-inicial.md):
 
 ```
-Processo nº [PROCESSO_1]
+Processo nº [CASE_1]
 
-**[PESSOA_1]**, brasileira, solteira, professora, CPF [CPF_1], residente na Rua Exemplo
-Inventado, 250, CEP [CEP_1], Belo Horizonte/MG, e-mail [EMAIL_1], telefone [TELEFONE_1],
-por sua advogada, Dra. [PESSOA_2], [OAB_1], vem propor
+**[PERSON_1]**, brasileira, solteira, professora, CPF [CPF_1], residente na Rua Exemplo
+Inventado, 250, CEP [CEP_1], Belo Horizonte/MG, e-mail [EMAIL_1], telefone [PHONE_1],
+por sua advogada, Dra. [PERSON_2], [OAB_1], vem propor
 ...
-em face de **[EMPRESA_1]**, CNPJ [CNPJ_1], pelos fatos a seguir.
+em face de **[COMPANY_1]**, CNPJ [CNPJ_1], pelos fatos a seguir.
 ```
 
 ### Ao digitar
@@ -124,16 +124,16 @@ Use `--projeto <pasta>` para apontar outro projeto.
 | CPF | `[CPF_n]` | Com ou sem pontuação, com validação dos dígitos verificadores. |
 | CNPJ | `[CNPJ_n]` | Numérico, com ou sem pontuação, e o novo formato alfanumérico (com pontuação), com validação dos dígitos verificadores. |
 | E-mail | `[EMAIL_n]` | Formato de endereço de e-mail. |
-| Telefone | `[TELEFONE_n]` | Fixo ou celular, com DDD válido; sem DDD, só com palavra-chave antes (Tel., Cel., WhatsApp...). |
+| Telefone | `[PHONE_n]` | Fixo ou celular, com DDD válido; sem DDD, só com palavra-chave antes (Tel., Cel., WhatsApp...). |
 | CEP | `[CEP_n]` | `00000-000` ou `00.000-000`; oito dígitos corridos só com "CEP" antes. |
-| Cartão | `[CARTAO_n]` | 13 a 19 dígitos, prefixo de bandeira plausível e algoritmo de Luhn. |
-| Processo | `[PROCESSO_n]` | Numeração única do CNJ, com validação do dígito verificador (módulo 97). |
+| Cartão | `[CARD_n]` | 13 a 19 dígitos, prefixo de bandeira plausível e algoritmo de Luhn. |
+| Processo | `[CASE_n]` | Numeração única do CNJ, com validação do dígito verificador (módulo 97). |
 | OAB | `[OAB_n]` | `OAB/SP 123.456`, `OAB-RJ nº 98765`, `OAB nº 45.678/MG` e variações, com UF válida. |
 | PIS/NIS | `[PIS_n]` | Formatado, ou corrido com PIS, PASEP, NIS ou NIT antes; dígito verificador validado. |
 | RG | `[RG_n]` | `12.345.678-9`, ou outros formatos com "RG" antes. |
-| Pessoa | `[PESSOA_n]` | Heurística: palavras capitalizadas (ou em caixa alta) iniciadas por um prenome brasileiro conhecido, com pelo menos um sobrenome; prenome sozinho só após Sr., Sra., Dr., Dra. etc. |
-| Empresa | `[EMPRESA_n]` | Razão social terminada em Ltda, S.A., S/A, EIRELI, SLU, EPP ou ME. |
-| Termo | `[TERMO_n]` | Lista de termos que você sempre quer mascarar. |
+| Pessoa | `[PERSON_n]` | Heurística: palavras capitalizadas (ou em caixa alta) iniciadas por um prenome brasileiro conhecido, com pelo menos um sobrenome; prenome sozinho só após Sr., Sra., Dr., Dra. etc. |
+| Empresa | `[COMPANY_n]` | Razão social terminada em Ltda, S.A., S/A, EIRELI, SLU, EPP ou ME. |
+| Termo | `[TERM_n]` | Lista de termos que você sempre quer mascarar. |
 
 ## Configuração
 
@@ -143,12 +143,12 @@ Rode `node dist/piiveil.mjs init` na pasta do projeto, ou crie `.piiveil/config.
 
 | Opção | Padrão | Descrição |
 | :- | :- | :- |
-| `termos` | `[]` | Termos sempre mascarados como `[TERMO_n]` (nome de operação, de cliente, de fazenda...). |
+| `termos` | `[]` | Termos sempre mascarados como `[TERM_n]` (nome de operação, de cliente, de fazenda...). |
 | `nomes` | `[]` | Nomes de pessoas sempre mascarados, mesmo os que a heurística não pega. |
 | `empresas` | `[]` | Nomes de empresas sempre mascarados, mesmo sem sufixo societário. |
 | `prenomes` | `[]` | Prenomes extras para a heurística de nomes. |
 | `ignorar` | `[]` | Trechos que nunca devem ser mascarados (por exemplo, o nome de um autor citado). |
-| `tiposDesativados` | `[]` | Tipos a não detectar, como `["TELEFONE"]`. |
+| `tiposDesativados` | `[]` | Tipos a não detectar, como `["PHONE"]`. |
 | `prompt` | `"bloquear"` | `"bloquear"`, `"avisar"` (deixa passar e avisa) ou `"desligado"`. |
 | `bloquearArquivosBinarios` | `true` | Impede o Read de PDFs e imagens. |
 | `desmascararBash` | `true` | Troca tokens por valores reais nos comandos do Bash. |
@@ -209,7 +209,7 @@ Algumas destas limitações vêm do próprio Claude Code e foram confirmadas tes
   erro não bloqueante e a saída original segue para o modelo. Quando o hook roda e algo dá errado, a falha é
   fechada: o conteúdo é ocultado ou a sessão é interrompida.
 - **Tela.** Um token dividido entre dois pedaços da resposta pode aparecer como token na tela.
-- **Texto que já contém algo igual a um token** (como `[PESSOA_1]` literal no documento original) seria
+- **Texto que já contém algo igual a um token** (como `[PERSON_1]` literal no documento original) seria
   trocado ao desmascarar.
 - **Diferenças em relação à documentação de hooks**, encontradas nos testes com o Claude Code: a saída da
   ferramenta chega em `tool_response` (objeto com o formato de cada ferramenta), e não em `tool_output`

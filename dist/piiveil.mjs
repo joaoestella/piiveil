@@ -74,34 +74,34 @@ function decifrar(dados, material) {
 
 // src/detectors/tipos.ts
 var TIPOS = [
-  "PESSOA",
-  "EMPRESA",
+  "PERSON",
+  "COMPANY",
   "CPF",
   "CNPJ",
   "EMAIL",
-  "TELEFONE",
+  "PHONE",
   "CEP",
-  "CARTAO",
-  "PROCESSO",
+  "CARD",
+  "CASE",
   "OAB",
   "PIS",
   "RG",
-  "TERMO"
+  "TERM"
 ];
 var PRIORIDADE = {
-  TERMO: 100,
+  TERM: 100,
   EMAIL: 95,
-  PROCESSO: 90,
+  CASE: 90,
   CNPJ: 85,
   CPF: 80,
-  CARTAO: 75,
+  CARD: 75,
   PIS: 70,
   OAB: 65,
   RG: 60,
   CEP: 55,
-  TELEFONE: 50,
-  EMPRESA: 40,
-  PESSOA: 30
+  PHONE: 50,
+  COMPANY: 40,
+  PERSON: 30
 };
 
 // src/vault/cofre.ts
@@ -177,7 +177,7 @@ var Cofre = class _Cofre {
    *
    * Os contadores são mantidos para que um token novo nunca reaproveite o
    * número de um token antigo que ainda esteja na conversa: depois de limpar,
-   * [PESSOA_1] antigo fica sem valor em vez de passar a apontar para outra pessoa.
+   * [PERSON_1] antigo fica sem valor em vez de passar a apontar para outra pessoa.
    * Se o cofre não puder ser decifrado (chave perdida), o arquivo é removido.
    */
   static async limpar(projeto, arquivo = caminhoDoCofre(projeto)) {
@@ -607,7 +607,7 @@ function detectarTelefone(texto) {
   const rx = re(
     String.raw`(?<int>\+\s?55[\s.-]?)?(?:(?:\((?<ddd1>0?\d{2})\)|(?<ddd2>0?\d{2}))(?<sep1>[\s.-]?))?(?<a>(?:9[\s.]?)?\d{4})(?<sep2>[\s.-]?)(?<b>\d{4})`
   );
-  return coletar(texto, rx, "TELEFONE", (m) => {
+  return coletar(texto, rx, "PHONE", (m) => {
     const g = m.groups ?? {};
     const dddBruto = g.ddd1 ?? g.ddd2;
     const ddd = dddBruto ? dddBruto.replace(/^0/, "") : void 0;
@@ -637,17 +637,17 @@ function detectarCartao(texto) {
   const amex = re(String.raw`\d{4}(?<s>[ -])\d{6}\k<s>\d{4,5}`);
   const corrido = re(String.raw`\d{13,19}`);
   return [
-    ...coletar(texto, agrupado, "CARTAO", (m) => validarCartao(m[0])),
-    ...coletar(texto, amex, "CARTAO", (m) => validarCartao(m[0])),
-    ...coletar(texto, corrido, "CARTAO", (m) => validarCartao(m[0]))
+    ...coletar(texto, agrupado, "CARD", (m) => validarCartao(m[0])),
+    ...coletar(texto, amex, "CARD", (m) => validarCartao(m[0])),
+    ...coletar(texto, corrido, "CARD", (m) => validarCartao(m[0]))
   ];
 }
 function detectarProcessoCNJ(texto) {
   const formatado = re(String.raw`\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}`);
   const corrido = re(String.raw`\d{20}`);
   return [
-    ...coletar(texto, formatado, "PROCESSO", (m) => validarProcessoCNJ(m[0])),
-    ...coletar(texto, corrido, "PROCESSO", (m) => validarProcessoCNJ(m[0]))
+    ...coletar(texto, formatado, "CASE", (m) => validarProcessoCNJ(m[0])),
+    ...coletar(texto, corrido, "CASE", (m) => validarProcessoCNJ(m[0]))
   ];
 }
 function detectarOAB(texto) {
@@ -1480,7 +1480,7 @@ function extrairNome(texto, trecho, prenomes) {
     if (!TRATAMENTO.test(antes)) return null;
   }
   return {
-    tipo: "PESSOA",
+    tipo: "PERSON",
     inicio: primeira.inicio,
     fim: ultima.fim,
     valor: texto.slice(primeira.inicio, ultima.fim)
@@ -1571,7 +1571,7 @@ function detectarEmpresas(texto) {
     if (!restantes.some((p) => new RegExp("\\p{L}{2,}", "u").test(p[0]))) continue;
     const inicio = idxNome[0] + (restantes[0]?.index ?? 0);
     const fim = idxSufixo[1];
-    achados.push({ tipo: "EMPRESA", inicio, fim, valor: texto.slice(inicio, fim) });
+    achados.push({ tipo: "COMPANY", inicio, fim, valor: texto.slice(inicio, fim) });
   }
   return achados;
 }
@@ -1595,27 +1595,27 @@ function criarDetectorTermos(termos, tipo) {
 
 // src/detectors/index.ts
 var IGNORAR_PADRAO = ["Maria da Penha", "Claude Code"];
-var PADRAO_TOKEN = /\[(?:PESSOA|EMPRESA|CPF|CNPJ|EMAIL|TELEFONE|CEP|CARTAO|PROCESSO|OAB|PIS|RG|TERMO)_\d+\]/g;
+var PADRAO_TOKEN = new RegExp(String.raw`\[(?:${TIPOS.join("|")})_\d+\]`, "g");
 function criarDetector(opcoes = {}) {
   const desativados = new Set(opcoes.tiposDesativados ?? []);
   const detectores = [
     ["CPF", detectarCPF],
     ["CNPJ", detectarCNPJ],
     ["EMAIL", detectarEmail],
-    ["TELEFONE", detectarTelefone],
+    ["PHONE", detectarTelefone],
     ["CEP", detectarCEP],
-    ["CARTAO", detectarCartao],
-    ["PROCESSO", detectarProcessoCNJ],
+    ["CARD", detectarCartao],
+    ["CASE", detectarProcessoCNJ],
     ["OAB", detectarOAB],
     ["PIS", detectarPIS],
     ["RG", detectarRG],
-    ["EMPRESA", detectarEmpresas],
-    ["PESSOA", criarDetectorNomes({ prenomesExtras: opcoes.prenomes })]
+    ["COMPANY", detectarEmpresas],
+    ["PERSON", criarDetectorNomes({ prenomesExtras: opcoes.prenomes })]
   ];
   const listas = [
-    criarDetectorTermos(opcoes.termos ?? [], "TERMO"),
-    criarDetectorTermos(opcoes.nomes ?? [], "PESSOA"),
-    criarDetectorTermos(opcoes.empresas ?? [], "EMPRESA")
+    criarDetectorTermos(opcoes.termos ?? [], "TERM"),
+    criarDetectorTermos(opcoes.nomes ?? [], "PERSON"),
+    criarDetectorTermos(opcoes.empresas ?? [], "COMPANY")
   ];
   const ignorar = new Set([...IGNORAR_PADRAO, ...opcoes.ignorar ?? []].map((t) => normalizarPalavra(t.trim())));
   const conhecidos = [...opcoes.conhecidos ?? []].filter((c) => c.valor.length > 0);
@@ -1916,7 +1916,7 @@ async function userPromptSubmit(entrada) {
 // src/hooks/session-start.ts
 var INSTRUCOES_MODELO = [
   "O plugin piiveil est\xE1 ativo neste projeto: dados pessoais nas sa\xEDdas das ferramentas foram trocados por tokens",
-  "como [PESSOA_1], [CPF_2], [EMPRESA_1], [EMAIL_3] e [PROCESSO_1].",
+  "como [PERSON_1], [CPF_2], [COMPANY_1], [EMAIL_3] e [CASE_1].",
   "Trate cada token como o pr\xF3prio dado. Ao escrever arquivos, editar ou rodar comandos, use os tokens exatamente",
   "como aparecem (com colchetes, mai\xFAsculas e n\xFAmero): eles s\xE3o trocados pelos valores reais antes da execu\xE7\xE3o,",
   "e o usu\xE1rio v\xEA os valores reais na tela. N\xE3o tente descobrir, adivinhar ou reconstruir os valores originais,",

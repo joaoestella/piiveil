@@ -39,7 +39,7 @@ describe("ida e volta (mascarar -> desmascarar)", () => {
     const c = Cofre.abrir(amb.projeto);
     mascarar("Paciente: Antônio Carlos Ribeiro Lima", c);
     const r = mascarar("ver anotação de antônio e de Antônio Carlos Ribeiro Lima.", c);
-    assert.equal(r.texto, "ver anotação de antônio e de [PESSOA_1].");
+    assert.equal(r.texto, "ver anotação de antônio e de [PERSON_1].");
   });
 
   test("mascarar é idempotente e não altera tokens", () => {
@@ -51,7 +51,7 @@ describe("ida e volta (mascarar -> desmascarar)", () => {
 
   test("tokens desconhecidos são preservados ao desmascarar", () => {
     const c = Cofre.abrir(amb.projeto);
-    assert.equal(desmascarar("texto com [PESSOA_99]", c), "texto com [PESSOA_99]");
+    assert.equal(desmascarar("texto com [PERSON_99]", c), "texto com [PERSON_99]");
   });
 });
 

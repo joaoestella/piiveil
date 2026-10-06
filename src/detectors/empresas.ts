@@ -48,7 +48,7 @@ export function detectarEmpresas(texto: string): Achado[] {
 
     const inicio = idxNome[0] + (restantes[0]?.index ?? 0);
     const fim = idxSufixo[1];
-    achados.push({ tipo: "EMPRESA", inicio, fim, valor: texto.slice(inicio, fim) });
+    achados.push({ tipo: "COMPANY", inicio, fim, valor: texto.slice(inicio, fim) });
   }
   return achados;
 }
