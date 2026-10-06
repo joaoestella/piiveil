@@ -1,258 +1,282 @@
 # piiveil
 
-Plugin para o [Claude Code](https://code.claude.com) que faz **pseudonimização reversível** de dados pessoais.
-O modelo trabalha com tokens como `[PERSON_1]`, `[CPF_1]` e `[COMPANY_1]`; você continua vendo os dados reais
-na tela, e os arquivos que o Claude Code grava saem com os dados reais.
+[Português](README.pt-BR.md) · English
 
-O foco são documentos brasileiros (contratos, laudos, peças jurídicas, planilhas financeiras) e a redução da
-exposição de dados pessoais, em linha com a LGPD. Tudo roda localmente: nenhum dado sai da sua máquina por
-causa do piiveil, e o mapa entre tokens e valores fica num cofre cifrado no seu computador.
+**Reversible pseudonymization of personal data for [Claude Code](https://code.claude.com).** The model works with
+tokens such as `[PERSON_1]`, `[SSN_1]` and `[COMPANY_1]`; you keep seeing the real data on screen, and the files
+Claude Code writes contain the real data.
 
-> **Versão 0.1 (MVP).** Leia a seção [Limitações](#limitações) antes de usar com dados reais. O piiveil reduz
-> o que chega ao modelo, mas não é garantia absoluta nem substitui as medidas de proteção de dados da sua
-> organização.
+piiveil is built for documents from **Brazil and the United States**: contracts, medical reports, court filings,
+leases, spreadsheets. It validates identifiers the way the issuing agencies do (CPF and CNPJ check digits, CNJ
+case numbers, SSN and ITIN ranges, EIN prefixes) instead of matching any string of digits. Everything runs
+locally: piiveil sends nothing anywhere, and the token map lives in an encrypted vault on your machine.
 
-## Como funciona
+> **Version 0.1 (MVP).** Read [Limitations](#limitations) before using it with real data. piiveil reduces what
+> reaches the model; it is not an absolute guarantee and does not replace your organization's data protection
+> measures (LGPD, HIPAA, GLBA, state privacy laws, contracts).
+
+## How it works
 
 ```
- arquivo no disco                      o que o modelo vê                 o que você vê / o que é gravado
- ───────────────────                   ─────────────────                 ───────────────────────────────
- Maria da Silva Souza,     Read ──►    [PERSON_1],            resposta ──►   Maria da Silva Souza,
- CPF 111.444.777-35        (mascara)   CPF [CPF_1]            (tela)         CPF 111.444.777-35
+ file on disk                        what the model sees            what you see / what gets written
+ ────────────────────                ───────────────────            ─────────────────────────────────
+ Jennifer Lynn Alvarez,   Read ──►   [PERSON_1],          reply ──►    Jennifer Lynn Alvarez,
+ SSN 412-73-9058          (mask)     SSN [SSN_1]          (screen)     SSN 412-73-9058
 
-                                       Write "[PERSON_1]" ──► (desmascara) ──► arquivo com "Maria da Silva Souza"
+                                     Write "[PERSON_1]" ──► (unmask) ──► file with "Jennifer Lynn Alvarez"
 ```
 
-O piiveil usa os hooks do Claude Code:
+piiveil uses Claude Code hooks:
 
-| Hook | O que faz |
+| Hook | What it does |
 | :- | :- |
-| `PostToolUse` (todas as ferramentas) | Detecta dados pessoais na saída de Read, Grep, Glob, Bash, WebFetch, MCP e das demais ferramentas e troca cada um por um token antes de o modelo ver. Se algo falhar, oculta o conteúdo em vez de deixá-lo passar. |
-| `PreToolUse` (Write, Edit, NotebookEdit, Bash, Grep, Glob, Read) | Troca os tokens pelos valores reais na entrada da ferramenta antes de ela rodar, para que os arquivos gravados e os comandos usem os dados reais. Também bloqueia o Read de PDFs e imagens (ver Limitações). |
-| `MessageDisplay` | Mostra na tela os valores reais no lugar dos tokens. O modelo e a transcrição continuam só com tokens. |
-| `UserPromptSubmit` | Se o que você digitou contém dado pessoal, o prompt é bloqueado (não chega ao modelo) e o piiveil mostra o token que você pode usar no lugar. |
-| `SessionStart` | Explica ao modelo como usar os tokens. |
+| `PostToolUse` (every tool) | Finds personal data in the output of Read, Grep, Glob, Bash, WebFetch, MCP tools and the rest, and replaces each item with a token before the model sees it. If anything fails, the content is hidden instead of passed through. |
+| `PreToolUse` (Write, Edit, NotebookEdit, Bash, Grep, Glob, Read) | Replaces tokens with the real values in the tool input before it runs, so written files and commands use the real data. Also blocks Read on PDFs and images (see Limitations). |
+| `MessageDisplay` | Shows the real values on screen in place of the tokens. The model and the transcript keep only the tokens. |
+| `UserPromptSubmit` | If what you typed contains personal data, the prompt is blocked (it never reaches the model) and piiveil tells you which token to use instead. |
+| `SessionStart` | Tells the model how to work with the tokens. |
 
-A mesma pessoa, CPF ou empresa recebe sempre o mesmo token dentro do projeto, em todas as sessões. O que já
-está no cofre é reconhecido em qualquer texto, mesmo fora do contexto em que foi detectado pela primeira vez.
+The same person, SSN or company always gets the same token within a project, across sessions. Anything already in
+the vault is recognized in any text, even outside the context where it was first detected.
 
-## Instalação
+## Installation
 
-Requisitos: Claude Code com suporte a plugins e **Node.js 18 ou mais recente** no `PATH` (os hooks rodam com
-`node`). Não é preciso instalar Python nem dependências extras: o plugin vem com um único arquivo JavaScript
-já compilado em `dist/`.
+Requirements: Claude Code with plugin support and **Node.js 18 or newer** on your `PATH` (the hooks run with
+`node`). Nothing else to install: the plugin ships a single prebuilt JavaScript file in `dist/`.
 
-Dentro do Claude Code:
+Inside Claude Code:
 
 ```
 /plugin marketplace add joaoestella/piiveil
 /plugin install piiveil@piiveil
 ```
 
-Enquanto o repositório for privado, a máquina precisa ter acesso a ele pelo git (por exemplo, com
-`gh auth login` ou uma credencial do GitHub configurada).
-
-Para testar uma cópia local sem instalar:
+To try a local copy without installing:
 
 ```bash
 git clone https://github.com/joaoestella/piiveil
 claude --plugin-dir ./piiveil
 ```
 
-Para conferir se está ativo, rode `/piiveil:status` dentro do Claude Code.
+Run `/piiveil:status` inside Claude Code to check that it is active.
 
-## Uso
+## Usage
 
-Trabalhe normalmente. Por exemplo, numa pasta com um contrato:
-
-```
-> Leia contrato.txt e crie partes.md com uma tabela das partes e seus CPFs.
-```
-
-O modelo lê o contrato já mascarado, escreve `partes.md` usando tokens, e o arquivo é gravado com os nomes e
-CPFs reais. Na tela, a resposta aparece com os valores reais.
-
-Veja o que o modelo recebe a partir de [`exemplos/peticao-inicial.md`](exemplos/peticao-inicial.md):
+Work as usual. For example, in a folder with a lease:
 
 ```
-Processo nº [CASE_1]
+> Read lease.txt and create parties.md with a table of the parties and their SSNs.
+```
 
-**[PERSON_1]**, brasileira, solteira, professora, CPF [CPF_1], residente na Rua Exemplo
-Inventado, 250, CEP [CEP_1], Belo Horizonte/MG, e-mail [EMAIL_1], telefone [PHONE_1],
-por sua advogada, Dra. [PERSON_2], [OAB_1], vem propor
+The model reads the lease already masked and writes `parties.md` with tokens, and the file is saved with the real
+names and SSNs. On screen, the reply shows the real values.
+
+This is what the model receives from [`examples/demand-letter.md`](examples/demand-letter.md):
+
+```
+[COMPANY_1]
+Attn: Mr. [PERSON_1]
+1200 Fictional Street, Suite 400
+San Francisco, CA [ZIP_1]
+
+Re: Security deposit of [PERSON_2] (SSN [SSN_1])
+
+Dear Mr. [PERSON_3],
 ...
-em face de **[COMPANY_1]**, CNPJ [CNPJ_1], pelos fatos a seguir.
+or contact me at [PHONE_1] or [EMAIL_1].
 ```
 
-### Ao digitar
+### When you type
 
-O hook de prompt não pode reescrever o que você digita, apenas bloquear. Se você escrever
-`qual o telefone do CPF 111.444.777-35?`, o prompt é barrado e o piiveil responde:
+The prompt hook can block what you type but cannot rewrite it. If you type
+`what is the phone of SSN 412-73-9058?`, the prompt is stopped and piiveil replies:
 
 ```
-piiveil: o prompt contém 1 dado(s) pessoal(is) e não foi enviado ao modelo.
-Reescreva usando os tokens abaixo (a resposta mostrará os valores reais na tela):
-  • "111.444.777-35" → use [CPF_1]
+piiveil: the prompt contains 1 piece(s) of personal data and was not sent to the model.
+Rewrite it using the tokens below (the reply will show the real values on screen):
+  • "412-73-9058" → use [SSN_1]
 ```
 
-Para textos longos, salve o conteúdo num arquivo e peça ao Claude Code para lê-lo: a leitura passa pelo
-mascaramento.
+For long texts, save the content to a file and ask Claude Code to read it: reads go through masking.
 
-### Comandos
+### Commands
 
-| Comando | O que faz |
+| Command | What it does |
 | :- | :- |
-| `/piiveil:status` | Mostra onde fica o cofre do projeto e quantos dados ele guarda, por tipo (sem mostrar valores). |
-| `/piiveil:limpar` | Apaga os valores do cofre do projeto. Os tokens antigos deixam de ser traduzidos, e seus números não são reaproveitados. |
+| `/piiveil:status` | Shows where the project vault is and how many items it holds, by type (never the values). |
+| `/piiveil:clear` | Erases the values in the project vault. Old tokens stop resolving, and their numbers are never reused. |
 
-Os mesmos comandos existem na linha de comando, junto com outros úteis para conferir a detecção:
+The same commands exist on the command line, plus a few that help check detection:
 
 ```bash
 node dist/piiveil.mjs status
-node dist/piiveil.mjs limpar
-node dist/piiveil.mjs init                      # cria .piiveil/config.json no projeto
-node dist/piiveil.mjs mascarar arquivo.txt      # mostra como o modelo veria o arquivo
-node dist/piiveil.mjs desmascarar arquivo.txt   # troca tokens pelos valores reais
+node dist/piiveil.mjs clear
+node dist/piiveil.mjs init               # create .piiveil/config.json in the project
+node dist/piiveil.mjs mask file.txt      # show how the model would see the file
+node dist/piiveil.mjs unmask file.txt    # replace tokens with the real values
 ```
 
-Use `--projeto <pasta>` para apontar outro projeto.
+Use `--project <folder>` to point to another project.
 
-## O que é detectado
+## What is detected
 
-| Tipo | Token | Como |
+**United States**
+
+| Type | Token | How |
 | :- | :- | :- |
-| CPF | `[CPF_n]` | Com ou sem pontuação, com validação dos dígitos verificadores. |
-| CNPJ | `[CNPJ_n]` | Numérico, com ou sem pontuação, e o novo formato alfanumérico (com pontuação), com validação dos dígitos verificadores. |
-| E-mail | `[EMAIL_n]` | Formato de endereço de e-mail. |
-| Telefone | `[PHONE_n]` | Fixo ou celular, com DDD válido; sem DDD, só com palavra-chave antes (Tel., Cel., WhatsApp...). |
-| CEP | `[CEP_n]` | `00000-000` ou `00.000-000`; oito dígitos corridos só com "CEP" antes. |
-| Cartão | `[CARD_n]` | 13 a 19 dígitos, prefixo de bandeira plausível e algoritmo de Luhn. |
-| Processo | `[CASE_n]` | Numeração única do CNJ, com validação do dígito verificador (módulo 97). |
-| OAB | `[OAB_n]` | `OAB/SP 123.456`, `OAB-RJ nº 98765`, `OAB nº 45.678/MG` e variações, com UF válida. |
-| PIS/NIS | `[PIS_n]` | Formatado, ou corrido com PIS, PASEP, NIS ou NIT antes; dígito verificador validado. |
-| RG | `[RG_n]` | `12.345.678-9`, ou outros formatos com "RG" antes. |
-| Pessoa | `[PERSON_n]` | Heurística: palavras capitalizadas (ou em caixa alta) iniciadas por um prenome brasileiro conhecido, com pelo menos um sobrenome; prenome sozinho só após Sr., Sra., Dr., Dra. etc. |
-| Empresa | `[COMPANY_n]` | Razão social terminada em Ltda, S.A., S/A, EIRELI, SLU, EPP ou ME. |
-| Termo | `[TERM_n]` | Lista de termos que você sempre quer mascarar. |
+| SSN | `[SSN_n]` | `123-45-6789` or `123 45 6789`; nine digits in a row only after "SSN" or "Social Security". Area 000, 666 and 900+, group 00, serial 0000 and numbers the SSA voided are rejected. |
+| ITIN | `[ITIN_n]` | Same formats, starting with 9 and within the IRS group ranges. |
+| EIN | `[EIN_n]` | `12-3456789` with a prefix assigned by the IRS; nine digits in a row only after "EIN" or "FEIN". |
+| Phone | `[PHONE_n]` | NANP numbers with formatting or `+1`; area code and exchange starting with 2-9, no N11 codes. Ten digits in a row only after "phone", "cell" etc. |
+| ZIP code | `[ZIP_n]` | ZIP+4 always; five digits only after a state abbreviation (`CA 94103`) or "ZIP". |
 
-## Configuração
+**Brazil**
 
-Rode `node dist/piiveil.mjs init` na pasta do projeto, ou crie `.piiveil/config.json` à mão (há um exemplo em
-[`exemplos/config.json`](exemplos/config.json)). Também é possível ter uma configuração global em
-`~/.piiveil/config.json`; as listas das duas são somadas e os valores simples do projeto prevalecem.
-
-| Opção | Padrão | Descrição |
+| Type | Token | How |
 | :- | :- | :- |
-| `termos` | `[]` | Termos sempre mascarados como `[TERM_n]` (nome de operação, de cliente, de fazenda...). |
-| `nomes` | `[]` | Nomes de pessoas sempre mascarados, mesmo os que a heurística não pega. |
-| `empresas` | `[]` | Nomes de empresas sempre mascarados, mesmo sem sufixo societário. |
-| `prenomes` | `[]` | Prenomes extras para a heurística de nomes. |
-| `ignorar` | `[]` | Trechos que nunca devem ser mascarados (por exemplo, o nome de um autor citado). |
-| `tiposDesativados` | `[]` | Tipos a não detectar, como `["PHONE"]`. |
-| `prompt` | `"bloquear"` | `"bloquear"`, `"avisar"` (deixa passar e avisa) ou `"desligado"`. |
-| `bloquearArquivosBinarios` | `true` | Impede o Read de PDFs e imagens. |
-| `desmascararBash` | `true` | Troca tokens por valores reais nos comandos do Bash. |
-| `ativo` | `true` | Liga ou desliga o piiveil no projeto. |
+| CPF | `[CPF_n]` | With or without punctuation, with check digit validation. |
+| CNPJ | `[CNPJ_n]` | Numeric, with or without punctuation, and the new alphanumeric format (punctuated), with check digit validation. |
+| CEP | `[CEP_n]` | `00000-000` or `00.000-000`; eight digits in a row only after "CEP". |
+| Case number | `[CASE_n]` | CNJ unified numbering, with check digit validation (mod 97). |
+| OAB | `[OAB_n]` | Bar registration such as `OAB/SP 123.456`, `OAB-RJ nº 98765`, `OAB nº 45.678/MG`, with a valid state. |
+| PIS/NIS | `[PIS_n]` | Punctuated, or in a row after PIS, PASEP, NIS or NIT; check digit validated. |
+| RG | `[RG_n]` | `12.345.678-9`, or other formats after "RG". |
+| Phone | `[PHONE_n]` | Landline or mobile with a valid area code (DDD); without one, only after a keyword (Tel., Cel., WhatsApp...). |
 
-A configuração pode conter nomes reais. **Não versione a pasta `.piiveil/`**: o `init` já cria um `.gitignore`
-dentro dela.
+**Both**
 
-## Cofre e chave
+| Type | Token | How |
+| :- | :- | :- |
+| E-mail | `[EMAIL_n]` | E-mail address format. |
+| Card | `[CARD_n]` | 13 to 19 digits, plausible network prefix and Luhn check. |
+| Person | `[PERSON_n]` | Heuristic: capitalized (or all-caps) words starting with a common Brazilian or American first name plus at least one surname; any capitalized name right after Mr., Mrs., Ms., Dr., Sr., Sra. and similar. |
+| Company | `[COMPANY_n]` | Legal names ending in Inc., LLC, Corp., Ltd., LLP, L.P., Ltda, S.A., S/A, EIRELI, SLU, EPP or ME. |
+| Term | `[TERM_n]` | Your own list of terms to always mask. |
 
-- O cofre de cada projeto fica em `~/.piiveil/cofres/<id>.cofre`, **fora da pasta do projeto**, para que não
-  seja versionado nem copiado junto por acidente. O `<id>` é derivado do caminho do projeto.
-- O conteúdo é cifrado com AES-256-GCM, que também detecta adulteração. A gravação é atômica e protegida por
-  trava, já que vários hooks podem rodar ao mesmo tempo.
-- A chave é gerada aleatoriamente na primeira vez e guardada em `~/.piiveil/chave` com permissão `600`.
-  Alternativamente, defina a variável `PIIVEIL_PASSPHRASE` para derivar a chave de uma senha (scrypt); nesse caso a
-  chave não fica em disco, mas a senha precisa estar no ambiente de cada sessão.
-- `PIIVEIL_HOME` muda a pasta base (`~/.piiveil`).
-- Se a chave for perdida, os tokens não podem mais ser traduzidos. Os arquivos já gravados não são afetados,
-  pois contêm os dados reais.
+## Configuration
 
-## Limitações
+Run `node dist/piiveil.mjs init` in the project folder, or create `.piiveil/config.json` by hand (see
+[`examples/config.json`](examples/config.json)). A global configuration in `~/.piiveil/config.json` also works;
+lists from both are combined, and simple values from the project win.
 
-Algumas destas limitações vêm do próprio Claude Code e foram confirmadas testando o plugin na versão 2.1.289.
+| Option | Default | Description |
+| :- | :- | :- |
+| `terms` | `[]` | Terms always masked as `[TERM_n]` (a codename, a client, a property...). |
+| `names` | `[]` | Person names always masked, including those the heuristic misses. |
+| `companies` | `[]` | Company names always masked, even without a legal suffix. |
+| `firstNames` | `[]` | Extra first names for the name heuristic. |
+| `ignore` | `[]` | Text that must never be masked (for example, an author you cite). |
+| `disabledTypes` | `[]` | Types not to detect, such as `["PHONE", "ZIP"]`. |
+| `prompt` | `"block"` | `"block"`, `"warn"` (let it through and warn) or `"off"`. |
+| `blockBinaryFiles` | `true` | Blocks Read on PDFs and images. |
+| `unmaskBash` | `true` | Replaces tokens with real values in Bash commands too. |
+| `language` | `"auto"` | Language of piiveil's messages: `"auto"`, `"en"` or `"pt-BR"`. In auto, `PIIVEIL_LANG` or the system locale decides. |
+| `enabled` | `true` | Turns piiveil on or off for the project. |
 
-- **Arquivos citados com `@` não passam pelos hooks.** O conteúdo vai direto para o modelo, sem
-  mascaramento. Peça para ler o arquivo ("leia contrato.txt") em vez de usar `@`. Para pastas com dados
-  sensíveis, crie uma regra de negação de leitura no `.claude/settings.json` do projeto:
+The Portuguese option names (`termos`, `nomes`, `ignorar`...) are accepted too.
+
+The configuration may contain real names. **Do not commit the `.piiveil/` folder**: `init` already adds a
+`.gitignore` inside it.
+
+## Vault and key
+
+- Each project's vault lives in `~/.piiveil/cofres/<id>.cofre`, **outside the project folder**, so it cannot be
+  committed or copied along by accident. The `<id>` is derived from the project path.
+- Contents are encrypted with AES-256-GCM, which also detects tampering. Writes are atomic and locked, since
+  several hooks may run at once.
+- The key is generated randomly the first time and stored in `~/.piiveil/chave` with `600` permissions.
+  Alternatively, set `PIIVEIL_PASSPHRASE` to derive the key from a passphrase (scrypt); the key then never touches
+  the disk, but the passphrase must be in the environment of every session.
+- `PIIVEIL_HOME` changes the base folder (`~/.piiveil`).
+- If the key is lost, tokens can no longer be resolved. Files already written are not affected: they contain the
+  real data.
+
+## Limitations
+
+Some of these come from Claude Code itself and were confirmed by testing the plugin on version 2.1.289.
+
+- **Files mentioned with `@` skip the hooks.** Their content goes straight to the model, unmasked. Ask Claude Code
+  to read the file ("read lease.txt") instead of using `@`. For folders with sensitive data, add a read deny rule
+  to the project's `.claude/settings.json`:
 
   ```json
   {
     "permissions": {
-      "deny": ["Read(./dados-sensiveis/**)"]
+      "deny": ["Read(./sensitive-data/**)"]
     }
   }
   ```
 
-  Segundo a documentação, o Claude Code aplica regras de `Read` às menções com `@` em regime de melhor
-  esforço. Essa regra também impede o Read nessa pasta; o conteúdo continua acessível pelo Bash (por exemplo,
-  `cat`), cuja saída é mascarada.
-- **Edit com tokens no `old_string`.** O Claude Code confere se o `old_string` existe no arquivo antes de
-  rodar o `PreToolUse`, então um trecho com tokens nunca é encontrado. As instruções de início de sessão pedem
-  ao modelo um `old_string` sem tokens (o `new_string` pode tê-los) ou, se não houver trecho assim, a
-  reescrita do arquivo com Write. Quando o hook roda, a troca funciona, e há teste para isso.
-- **PDFs e imagens** lidos pelo Read chegam ao modelo como documento ou imagem, sem texto para mascarar. Por
-  isso o piiveil bloqueia esse Read por padrão; extraia o texto pelo Bash (`pdftotext arquivo.pdf -`), cuja
-  saída é mascarada.
-- **Detecção de nomes por heurística.** Nomes que não começam por um prenome da lista, nomes estrangeiros e
-  prenomes sozinhos (sem Sr., Dra. etc.) podem passar. Também há falsos positivos, como nomes de ruas que
-  homenageiam pessoas. Endereços, datas de nascimento e outros dados sem formato fixo não são detectados no
-  MVP; use `termos` e `nomes` para o que for importante. A detecção por NER está planejada para a fase 2.
-- **Grafias diferentes viram tokens diferentes.** `LARISSA COUTO` e `Larissa Couto` recebem tokens distintos,
-  porque cada token volta exatamente para o texto original.
-- **Comandos do Bash recebem os dados reais.** Um comando como `curl` com um token enviaria o valor real
-  para fora. Revise os comandos antes de aprovar, ou defina `desmascararBash: false`. Valores com aspas ou
-  caracteres especiais do shell não são inseridos em comandos: o piiveil nega a execução.
-- **Se o hook não conseguir nem iniciar** (por exemplo, sem `node` no `PATH`), o Claude Code trata isso como
-  erro não bloqueante e a saída original segue para o modelo. Quando o hook roda e algo dá errado, a falha é
-  fechada: o conteúdo é ocultado ou a sessão é interrompida.
-- **Tela.** Um token dividido entre dois pedaços da resposta pode aparecer como token na tela.
-- **Texto que já contém algo igual a um token** (como `[PERSON_1]` literal no documento original) seria
-  trocado ao desmascarar.
-- **Diferenças em relação à documentação de hooks**, encontradas nos testes com o Claude Code: a saída da
-  ferramenta chega em `tool_response` (objeto com o formato de cada ferramenta), e não em `tool_output`
-  (texto), e `updatedToolOutput` precisa manter esse formato, senão é ignorado; o `MessageDisplay` recebe o
-  texto no campo `delta`; o `UserPromptSubmit` não tem `suppressOriginalPrompt`, mas um prompt bloqueado já é
-  descartado sem chegar ao modelo. O piiveil aceita as duas formas onde há diferença.
+  According to the documentation, Claude Code applies `Read` rules to `@` mentions on a best-effort basis. The rule
+  also blocks Read in that folder; the content remains reachable through Bash (for example, `cat`), whose output is
+  masked.
+- **Edit with tokens in `old_string`.** Claude Code checks that `old_string` exists in the file before running
+  `PreToolUse`, so text with tokens is never found. The session instructions ask the model for an `old_string`
+  without tokens (`new_string` may have them) or, if there is no such text, to rewrite the file with Write. When
+  the hook does run, the replacement works, and there is a test for it.
+- **PDFs and images** read with Read reach the model as a document or image, with no text to mask. That is why
+  piiveil blocks those reads by default; extract the text with Bash (`pdftotext file.pdf -`), whose output is
+  masked.
+- **Name detection is a heuristic.** Names that do not start with a listed first name (unless they follow Mr., Ms.,
+  Dr. etc.), less common foreign names and lone first names may slip through. There are false positives too, such as
+  streets named after people or Title Case headings that start with a first name. Street addresses, dates of
+  birth, driver's license and passport numbers and other free-form data are not detected in the MVP; use `terms` and
+  `names` for what matters. NER-based detection is planned for phase 2.
+- **Different spellings become different tokens.** `JENNIFER ALVAREZ` and `Jennifer Alvarez` get separate tokens,
+  because each token maps back to the exact original text.
+- **Bash commands receive the real data.** A command such as `curl` with a token would send the real value out.
+  Review commands before approving them, or set `unmaskBash: false`. Values with quotes or shell special characters
+  are never inserted into commands: piiveil denies the call.
+- **If the hook cannot even start** (for example, no `node` on the `PATH`), Claude Code treats it as a non-blocking
+  error and the original output goes to the model. When the hook runs and something goes wrong, it fails closed:
+  the content is hidden or the session is stopped.
+- **Screen.** A token split across two streamed chunks of the reply may show up as a token.
+- **Text that already looks like a token** (a literal `[PERSON_1]` in the original document) would be replaced when
+  unmasking.
+- **Differences from the hooks documentation**, found by testing with Claude Code: the tool output arrives in
+  `tool_response` (an object shaped like each tool's result), not `tool_output` (a string), and `updatedToolOutput`
+  must keep that shape or it is ignored; `MessageDisplay` receives the text in `delta`; `UserPromptSubmit` has no
+  `suppressOriginalPrompt`, but a blocked prompt is discarded without reaching the model anyway. piiveil accepts both
+  forms wherever they differ.
 
-### Sobre a LGPD
+### About privacy laws
 
-Pseudonimização, na definição da LGPD (art. 13, § 4º), é o tratamento pelo qual um dado perde a possibilidade
-de associação a um indivíduo, senão pelo uso de informação adicional mantida separadamente em ambiente
-controlado e seguro. É o que o piiveil faz em relação ao modelo: o cofre é essa informação adicional e fica só
-na sua máquina. Dados pseudonimizados continuam sendo dados pessoais, e o uso do piiveil não dispensa as demais
-obrigações (base legal, contratos com fornecedores, registro das operações, orientação do encarregado). Este
-projeto não é aconselhamento jurídico.
+Pseudonymized data is still personal data under the LGPD (Brazil), the GDPR and most US state privacy laws, and
+piiveil does not meet HIPAA's de-identification standards (it does not remove dates, addresses and other
+identifiers listed there). Brazil's LGPD (art. 13, § 4) defines pseudonymization as
+processing after which data can no longer be linked to an individual except through additional information kept
+separately in a controlled and secure environment; that is what piiveil does with respect to the model, with the
+vault as the additional information kept only on your machine. Using piiveil does not remove other obligations
+(legal basis, vendor agreements, records of processing, guidance from your privacy officer). This project is not
+legal advice.
 
-## Desenvolvimento
+## Development
 
 ```bash
 npm install
-npm test          # compila com tsc e roda os testes (node:test)
-npm run bundle    # gera dist/piiveil.mjs com esbuild
+npm test          # compiles with tsc and runs the tests (node:test)
+npm run bundle    # builds dist/piiveil.mjs with esbuild
 ```
 
-O `dist/piiveil.mjs` é versionado porque a instalação de plugins não executa etapa de build; um teste falha se
-ele estiver desatualizado em relação a `src/`.
+`dist/piiveil.mjs` is committed because plugin installation runs no build step; a test fails if it is out of date
+with `src/`. The source code and comments are in Portuguese; contributions in English or Portuguese are welcome.
 
 ```
-.claude-plugin/   plugin.json e marketplace.json
-hooks/hooks.json  registro dos hooks
-skills/           comandos /piiveil:status e /piiveil:limpar
-src/detectors/    detectores, validação de dígitos e lista de prenomes
-src/vault/        criptografia e cofre
-src/hooks/        um arquivo por hook
-src/cli.ts        linha de comando e ponto de entrada dos hooks
-tests/            testes; tests/fixtures/ tem documentos sintéticos
-exemplos/         documentos e configuração de exemplo, todos fictícios
+.claude-plugin/   plugin.json and marketplace.json
+hooks/hooks.json  hook registration
+skills/           /piiveil:status and /piiveil:clear
+src/detectors/    detectors, check digit validation and first-name lists (Brazil and US)
+src/vault/        encryption and vault
+src/hooks/        one file per hook
+src/i18n.ts       messages in English and Portuguese
+src/cli.ts        command line and hook entry point
+tests/            tests; tests/fixtures/ holds synthetic documents
+examples/         example documents and configuration, all fictitious
 ```
 
-Todos os documentos de teste e de exemplo são sintéticos. Os números de CPF, CNPJ, PIS e cartão foram gerados
-com dígitos verificadores válidos apenas para exercitar os detectores; qualquer coincidência com documentos
-reais é acidental.
+All test and example documents are synthetic. CPF, CNPJ, PIS, SSN, EIN and card numbers were generated to satisfy
+the validation rules only so the detectors can be exercised; any match with real documents is accidental.
 
-## Licença
+## License
 
 [MIT](LICENSE)
