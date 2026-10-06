@@ -3,8 +3,8 @@
 [Português](README.pt-BR.md) · English
 
 **Reversible pseudonymization of personal data for [Claude Code](https://code.claude.com).** The model works with
-tokens such as `[PERSON_1]`, `[SSN_1]` and `[COMPANY_1]`; you keep seeing the real data on screen, and the files
-Claude Code writes contain the real data.
+tokens such as `[PERSON_1]`, `[SSN_1]` and `[COMPANY_1]`, while the files Claude Code writes contain the real
+data.
 
 piiveil is built for documents from **Brazil and the United States**: contracts, medical reports, court filings,
 leases, spreadsheets. It validates identifiers the way the issuing agencies do (CPF and CNPJ check digits, CNJ
@@ -18,12 +18,12 @@ locally: piiveil sends nothing anywhere, and the token map lives in an encrypted
 ## How it works
 
 ```
- file on disk                        what the model sees            what you see / what gets written
- ────────────────────                ───────────────────            ─────────────────────────────────
- Jennifer Lynn Alvarez,   Read ──►   [PERSON_1],          reply ──►    Jennifer Lynn Alvarez,
- SSN 412-73-9058          (mask)     SSN [SSN_1]          (screen)     SSN 412-73-9058
+ file on disk                         what the model sees              what gets written
+ ─────────────────────                ───────────────────              ─────────────────────────────
+ Jennifer Lynn Alvarez,    Read ──►   [PERSON_1],
+ SSN 412-73-9058           (mask)     SSN [SSN_1]
 
-                                     Write "[PERSON_1]" ──► (unmask) ──► file with "Jennifer Lynn Alvarez"
+                                      Write "[PERSON_1]" ──► (unmask) ──► file with "Jennifer Lynn Alvarez"
 ```
 
 piiveil uses Claude Code hooks:
@@ -32,7 +32,7 @@ piiveil uses Claude Code hooks:
 | :- | :- |
 | `PostToolUse` (every tool) | Finds personal data in the output of Read, Grep, Glob, Bash, WebFetch, MCP tools and the rest, and replaces each item with a token before the model sees it. If anything fails, the content is hidden instead of passed through. |
 | `PreToolUse` (Write, Edit, NotebookEdit, Bash, Grep, Glob, Read) | Replaces tokens with the real values in the tool input before it runs, so written files and commands use the real data. Also blocks Read on PDFs and images (see Limitations). |
-| `MessageDisplay` | Shows the real values on screen in place of the tokens. The model and the transcript keep only the tokens. |
+| `MessageDisplay` | Optional (`showRealValues`, off by default): shows the real values on screen in place of the tokens. The model and the transcript keep only the tokens. See Limitations. |
 | `UserPromptSubmit` | If what you typed contains personal data, the prompt is blocked (it never reaches the model) and piiveil tells you which token to use instead. |
 | `SessionStart` | Tells the model how to work with the tokens. |
 
@@ -69,7 +69,7 @@ Work as usual. For example, in a folder with a lease:
 ```
 
 The model reads the lease already masked and writes `parties.md` with tokens, and the file is saved with the real
-names and SSNs. On screen, the reply shows the real values.
+names and SSNs. On screen, the reply shows the tokens, which you can resolve with `unmask` or by opening the file.
 
 This is what the model receives from [`examples/demand-letter.md`](examples/demand-letter.md):
 
@@ -93,7 +93,7 @@ The prompt hook can block what you type but cannot rewrite it. If you type
 
 ```
 piiveil: the prompt contains 1 piece(s) of personal data and was not sent to the model.
-Rewrite it using the tokens below (the reply will show the real values on screen):
+Rewrite it using the tokens below:
   • "412-73-9058" → use [SSN_1]
 ```
 
@@ -173,6 +173,7 @@ lists from both are combined, and simple values from the project win.
 | `prompt` | `"block"` | `"block"`, `"warn"` (let it through and warn) or `"off"`. |
 | `blockBinaryFiles` | `true` | Blocks Read on PDFs and images. |
 | `unmaskBash` | `true` | Replaces tokens with real values in Bash commands too. |
+| `showRealValues` | `false` | Shows the real values on screen in place of the tokens (see Limitations). |
 | `language` | `"auto"` | Language of piiveil's messages: `"auto"`, `"en"` or `"pt-BR"`. In auto, `PIIVEIL_LANG` or the system locale decides. |
 | `enabled` | `true` | Turns piiveil on or off for the project. |
 
@@ -233,7 +234,10 @@ Some of these come from Claude Code itself and were confirmed by testing the plu
 - **If the hook cannot even start** (for example, no `node` on the `PATH`), Claude Code treats it as a non-blocking
   error and the original output goes to the model. When the hook runs and something goes wrong, it fails closed:
   the content is hidden or the session is stopped.
-- **Screen.** A token split across two streamed chunks of the reply may show up as a token.
+- **Real values on screen are off by default.** The `MessageDisplay` hook can swap tokens for real values while the
+  reply streams, but on Claude Code 2.1.291 replacing a chunk with text of a different length cuts parts of the reply
+  on screen (words disappear and table borders break). The files and what the model sees are not affected. Turn it
+  on with `showRealValues: true` if you accept that; even then, a token split across two chunks shows up as a token.
 - **Text that already looks like a token** (a literal `[PERSON_1]` in the original document) would be replaced when
   unmasking.
 - **Differences from the hooks documentation**, found by testing with Claude Code: the tool output arrives in
