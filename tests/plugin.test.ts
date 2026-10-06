@@ -32,13 +32,18 @@ describe("pacote do plugin", () => {
       UserPromptSubmit: "user-prompt-submit",
       PreToolUse: "pre-tool-use",
       PostToolUse: "post-tool-use",
-      MessageDisplay: "message-display",
     };
     assert.deepEqual(Object.keys(hooks).sort(), Object.keys(eventos).sort());
     for (const [evento, grupos] of Object.entries(hooks) as Array<[string, Array<{ hooks: Array<{ args: string[] }> }>]>) {
       const args = grupos[0]!.hooks[0]!.args;
       assert.deepEqual(args, ["${CLAUDE_PLUGIN_ROOT}/dist/piiveil.mjs", "hook", eventos[evento]]);
     }
+  });
+
+  test("MessageDisplay não é registrado por padrão", () => {
+    // O Claude Code espera o hook a cada pedaço da resposta; com ele registrado, a exibição
+    // atrasa e sai embaralhada no terminal mesmo quando o hook não altera nada.
+    assert.equal(json("hooks/hooks.json").hooks.MessageDisplay, undefined);
   });
 
   test("comandos do plugin não usam nomes de comandos nativos do Claude Code", () => {

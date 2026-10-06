@@ -33,7 +33,7 @@ O piiveil usa os hooks do Claude Code:
 | :- | :- |
 | `PostToolUse` (todas as ferramentas) | Detecta dados pessoais na saída de Read, Grep, Glob, Bash, WebFetch, MCP e das demais ferramentas e troca cada um por um token antes de o modelo ver. Se algo falhar, oculta o conteúdo em vez de deixá-lo passar. |
 | `PreToolUse` (Write, Edit, NotebookEdit, Bash, Grep, Glob, Read) | Troca os tokens pelos valores reais na entrada da ferramenta antes de ela rodar, para que os arquivos gravados e os comandos usem os dados reais. Também bloqueia o Read de PDFs e imagens (ver Limitações). |
-| `MessageDisplay` | Opcional (`showRealValues`, desligado por padrão): mostra na tela os valores reais no lugar dos tokens. O modelo e a transcrição continuam só com tokens. Ver Limitações. |
+| `MessageDisplay` | Opcional e não registrado por padrão: mostra na tela os valores reais no lugar dos tokens. O modelo e a transcrição continuam só com tokens. Veja em Limitações como ligar. |
 | `UserPromptSubmit` | Se o que você digitou contém dado pessoal, o prompt é bloqueado (não chega ao modelo) e o piiveil mostra o token que você pode usar no lugar. |
 | `SessionStart` | Explica ao modelo como usar os tokens. |
 
@@ -173,7 +173,7 @@ Rode `node dist/piiveil.mjs init` na pasta do projeto, ou crie `.piiveil/config.
 | `prompt` | `"block"` | `"block"` (bloquear), `"warn"` (deixa passar e avisa) ou `"off"` (desligado). |
 | `blockBinaryFiles` | `true` | Impede o Read de PDFs e imagens. |
 | `unmaskBash` | `true` | Troca tokens por valores reais nos comandos do Bash. |
-| `showRealValues` | `false` | Mostra na tela os valores reais no lugar dos tokens (ver Limitações). |
+| `showRealValues` | `false` | Mostra na tela os valores reais no lugar dos tokens; exige também registrar o hook `MessageDisplay` (ver Limitações). |
 | `language` | `"auto"` | Idioma das mensagens do piiveil: `"auto"`, `"en"` ou `"pt-BR"`. Em auto, decide `PIIVEIL_LANG` ou a localidade do sistema. |
 | `enabled` | `true` | Liga ou desliga o piiveil no projeto. |
 
@@ -235,11 +235,23 @@ Algumas destas limitações vêm do próprio Claude Code e foram confirmadas tes
 - **Se o hook não conseguir nem iniciar** (por exemplo, sem `node` no `PATH`), o Claude Code trata isso como erro
   não bloqueante e a saída original segue para o modelo. Quando o hook roda e algo dá errado, a falha é fechada: o
   conteúdo é ocultado ou a sessão é interrompida.
-- **Valores reais na tela vêm desligados.** O hook `MessageDisplay` consegue trocar os tokens pelos valores reais
-  enquanto a resposta é exibida, mas no Claude Code 2.1.291 trocar um pedaço por um texto de tamanho diferente corta
-  partes da resposta na tela (somem palavras e bordas de tabela). Os arquivos e o que o modelo vê não são afetados.
-  Ligue com `showRealValues: true` se aceitar isso; mesmo assim, um token dividido entre dois pedaços aparece como
-  token.
+- **Valores reais na tela vêm desligados.** Um hook `MessageDisplay` consegue trocar os tokens pelos valores reais
+  enquanto a resposta é exibida, mas no Claude Code 2.1.291 a saída no terminal ficou embaralhada com ele registrado
+  (somem palavras e bordas de tabela), então o plugin não o registra. Os arquivos e o que o modelo vê não são
+  afetados. Para testar mesmo assim, defina `"showRealValues": true` no `.piiveil/config.json` e adicione o hook ao
+  `~/.claude/settings.json`, apontando para a sua cópia do plugin:
+
+  ```json
+  {
+    "hooks": {
+      "MessageDisplay": [
+        { "hooks": [{ "type": "command", "command": "node", "args": ["/caminho/para/piiveil/dist/piiveil.mjs", "hook", "message-display"], "timeout": 5 }] }
+      ]
+    }
+  }
+  ```
+
+  Mesmo assim, um token dividido entre dois pedaços da resposta aparece como token.
 - **Texto que já contém algo igual a um token** (como `[PERSON_1]` literal no documento original) seria trocado ao
   desmascarar.
 - **Diferenças em relação à documentação de hooks**, encontradas nos testes com o Claude Code: a saída da

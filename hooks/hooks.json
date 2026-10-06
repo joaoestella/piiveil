@@ -1,5 +1,5 @@
 {
-  "description": "piiveil: mascara dados pessoais antes do modelo e restaura os valores reais nos arquivos e na tela",
+  "description": "piiveil: mascara dados pessoais antes do modelo e restaura os valores reais nos arquivos",
   "hooks": {
     "SessionStart": [
       {
@@ -7,7 +7,11 @@
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/dist/piiveil.mjs", "hook", "session-start"],
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/dist/piiveil.mjs",
+              "hook",
+              "session-start"
+            ],
             "timeout": 15
           }
         ]
@@ -19,7 +23,11 @@
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/dist/piiveil.mjs", "hook", "user-prompt-submit"],
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/dist/piiveil.mjs",
+              "hook",
+              "user-prompt-submit"
+            ],
             "timeout": 20
           }
         ]
@@ -32,7 +40,11 @@
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/dist/piiveil.mjs", "hook", "pre-tool-use"],
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/dist/piiveil.mjs",
+              "hook",
+              "pre-tool-use"
+            ],
             "timeout": 20
           }
         ]
@@ -45,20 +57,12 @@
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/dist/piiveil.mjs", "hook", "post-tool-use"],
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/dist/piiveil.mjs",
+              "hook",
+              "post-tool-use"
+            ],
             "timeout": 30
-          }
-        ]
-      }
-    ],
-    "MessageDisplay": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/dist/piiveil.mjs", "hook", "message-display"],
-            "timeout": 5
           }
         ]
       }

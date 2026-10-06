@@ -32,7 +32,7 @@ piiveil uses Claude Code hooks:
 | :- | :- |
 | `PostToolUse` (every tool) | Finds personal data in the output of Read, Grep, Glob, Bash, WebFetch, MCP tools and the rest, and replaces each item with a token before the model sees it. If anything fails, the content is hidden instead of passed through. |
 | `PreToolUse` (Write, Edit, NotebookEdit, Bash, Grep, Glob, Read) | Replaces tokens with the real values in the tool input before it runs, so written files and commands use the real data. Also blocks Read on PDFs and images (see Limitations). |
-| `MessageDisplay` | Optional (`showRealValues`, off by default): shows the real values on screen in place of the tokens. The model and the transcript keep only the tokens. See Limitations. |
+| `MessageDisplay` | Optional and not registered by default: shows the real values on screen in place of the tokens. The model and the transcript keep only the tokens. See Limitations for how to turn it on. |
 | `UserPromptSubmit` | If what you typed contains personal data, the prompt is blocked (it never reaches the model) and piiveil tells you which token to use instead. |
 | `SessionStart` | Tells the model how to work with the tokens. |
 
@@ -173,7 +173,7 @@ lists from both are combined, and simple values from the project win.
 | `prompt` | `"block"` | `"block"`, `"warn"` (let it through and warn) or `"off"`. |
 | `blockBinaryFiles` | `true` | Blocks Read on PDFs and images. |
 | `unmaskBash` | `true` | Replaces tokens with real values in Bash commands too. |
-| `showRealValues` | `false` | Shows the real values on screen in place of the tokens (see Limitations). |
+| `showRealValues` | `false` | Shows the real values on screen in place of the tokens; also requires registering the `MessageDisplay` hook (see Limitations). |
 | `language` | `"auto"` | Language of piiveil's messages: `"auto"`, `"en"` or `"pt-BR"`. In auto, `PIIVEIL_LANG` or the system locale decides. |
 | `enabled` | `true` | Turns piiveil on or off for the project. |
 
@@ -234,10 +234,23 @@ Some of these come from Claude Code itself and were confirmed by testing the plu
 - **If the hook cannot even start** (for example, no `node` on the `PATH`), Claude Code treats it as a non-blocking
   error and the original output goes to the model. When the hook runs and something goes wrong, it fails closed:
   the content is hidden or the session is stopped.
-- **Real values on screen are off by default.** The `MessageDisplay` hook can swap tokens for real values while the
-  reply streams, but on Claude Code 2.1.291 replacing a chunk with text of a different length cuts parts of the reply
-  on screen (words disappear and table borders break). The files and what the model sees are not affected. Turn it
-  on with `showRealValues: true` if you accept that; even then, a token split across two chunks shows up as a token.
+- **Real values on screen are off by default.** A `MessageDisplay` hook can swap tokens for real values while the
+  reply streams, but on Claude Code 2.1.291 the terminal output came out scrambled when it was registered (words
+  disappeared and table borders broke), so the plugin does not register it. The files and what the model sees are not
+  affected. To try it anyway, set `"showRealValues": true` in `.piiveil/config.json` and add the hook to
+  `~/.claude/settings.json`, pointing to your copy of the plugin:
+
+  ```json
+  {
+    "hooks": {
+      "MessageDisplay": [
+        { "hooks": [{ "type": "command", "command": "node", "args": ["/path/to/piiveil/dist/piiveil.mjs", "hook", "message-display"], "timeout": 5 }] }
+      ]
+    }
+  }
+  ```
+
+  Even then, a token split across two streamed chunks shows up as a token.
 - **Text that already looks like a token** (a literal `[PERSON_1]` in the original document) would be replaced when
   unmasking.
 - **Differences from the hooks documentation**, found by testing with Claude Code: the tool output arrives in
