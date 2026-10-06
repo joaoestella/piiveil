@@ -1,5 +1,5 @@
 {
-  "name": "sigilo",
+  "name": "piiveil",
   "version": "0.1.0",
   "description": "Pseudonimização reversível de dados pessoais para o Claude Code, com foco em documentos brasileiros e na LGPD",
   "private": true,
@@ -8,7 +8,7 @@
   "author": "João Vítor Estella",
   "repository": {
     "type": "git",
-    "url": "https://github.com/joaoestella/sigilo"
+    "url": "https://github.com/joaoestella/piiveil"
   },
   "engines": {
     "node": ">=18.17"
@@ -17,7 +17,7 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "npm run build && node --test \"build/tests/**/*.test.js\"",
-    "bundle": "esbuild src/cli.ts --bundle --platform=node --format=esm --target=node18 --outfile=dist/sigilo.mjs --legal-comments=none"
+    "bundle": "esbuild src/cli.ts --bundle --platform=node --format=esm --target=node18 --outfile=dist/piiveil.mjs --legal-comments=none"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",

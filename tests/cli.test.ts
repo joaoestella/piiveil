@@ -19,7 +19,7 @@ describe("linha de comando", () => {
   test("JSON inválido no PostToolUse interrompe a sessão", async () => {
     const r = (await executarHook("post-tool-use", "{quebrado")) as Qualquer;
     assert.equal(r.continue, false);
-    assert.match(r.stopReason, /sigilo/);
+    assert.match(r.stopReason, /piiveil/);
   });
 
   test("JSON inválido no PreToolUse nega a ferramenta", async () => {
@@ -30,7 +30,7 @@ describe("linha de comando", () => {
   test("processo real: stdin -> stdout", async () => {
     const cli = fileURLToPath(new URL("../src/cli.js", import.meta.url));
     const filho = execFile(process.execPath, [cli, "hook", "post-tool-use"], {
-      env: { ...process.env, SIGILO_HOME: amb.home, CLAUDE_PROJECT_DIR: amb.projeto },
+      env: { ...process.env, PIIVEIL_HOME: amb.home, CLAUDE_PROJECT_DIR: amb.projeto },
     });
     let saida = "";
     filho.stdout!.on("data", (d) => (saida += d));
@@ -41,7 +41,7 @@ describe("linha de comando", () => {
 
   test("status e limpar", async () => {
     const cli = fileURLToPath(new URL("../src/cli.js", import.meta.url));
-    const env = { ...process.env, SIGILO_HOME: amb.home };
+    const env = { ...process.env, PIIVEIL_HOME: amb.home };
     const c = Cofre.abrir(amb.projeto);
     c.tokenPara("Maria Souza", "PESSOA");
     c.salvar();

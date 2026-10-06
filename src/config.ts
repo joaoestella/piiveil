@@ -7,7 +7,7 @@ import { diretorioBase } from "./vault/cofre.js";
 export type ModoPrompt = "bloquear" | "avisar" | "desligado";
 
 export interface Config {
-  /** Liga ou desliga o sigilo por completo. */
+  /** Liga ou desliga o piiveil por completo. */
   ativo: boolean;
   termos: string[];
   nomes: string[];
@@ -38,20 +38,20 @@ export const CONFIG_PADRAO: Config = {
 
 export interface ConfigCarregada {
   config: Config;
-  /** Problemas encontrados nos arquivos (o sigilo segue com o que for válido). */
+  /** Problemas encontrados nos arquivos (o piiveil segue com o que for válido). */
   avisos: string[];
   arquivos: string[];
 }
 
 export function arquivosDeConfig(projeto: string): string[] {
-  return [join(diretorioBase(), "config.json"), join(resolve(projeto), ".sigilo", "config.json")];
+  return [join(diretorioBase(), "config.json"), join(resolve(projeto), ".piiveil", "config.json")];
 }
 
 const LISTAS = ["termos", "nomes", "empresas", "prenomes", "ignorar"] as const;
 
 /**
- * Junta a configuração global (~/.sigilo/config.json) com a do projeto
- * (.sigilo/config.json). Listas são somadas; valores simples do projeto
+ * Junta a configuração global (~/.piiveil/config.json) com a do projeto
+ * (.piiveil/config.json). Listas são somadas; valores simples do projeto
  * prevalecem sobre os globais.
  */
 export function carregarConfig(projeto: string): ConfigCarregada {

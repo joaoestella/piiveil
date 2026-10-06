@@ -47,11 +47,11 @@ describe("UserPromptSubmit", () => {
   test("deixa passar prompt sem dados pessoais, com tokens ou comando de barra", async () => {
     assert.equal(await userPromptSubmit(base("UserPromptSubmit", { prompt: "resuma o contrato" })), null);
     assert.equal(await userPromptSubmit(base("UserPromptSubmit", { prompt: "quem é [PESSOA_1]?" })), null);
-    assert.equal(await userPromptSubmit(base("UserPromptSubmit", { prompt: "/sigilo:status" })), null);
+    assert.equal(await userPromptSubmit(base("UserPromptSubmit", { prompt: "/piiveil:status" })), null);
   });
   test("modo avisar não bloqueia", async () => {
-    mkdirSync(join(amb.projeto, ".sigilo"));
-    writeFileSync(join(amb.projeto, ".sigilo", "config.json"), JSON.stringify({ prompt: "avisar" }));
+    mkdirSync(join(amb.projeto, ".piiveil"));
+    writeFileSync(join(amb.projeto, ".piiveil", "config.json"), JSON.stringify({ prompt: "avisar" }));
     const r = (await userPromptSubmit(base("UserPromptSubmit", { prompt: "email ana@exemplo.com" }))) as Qualquer;
     assert.equal(r.decision, undefined);
     assert.match(r.systemMessage, /sem pseudonimização/);
@@ -60,8 +60,8 @@ describe("UserPromptSubmit", () => {
 
 describe("SessionStart", () => {
   test("injeta instruções e avisa sobre configuração inválida", async () => {
-    mkdirSync(join(amb.projeto, ".sigilo"));
-    writeFileSync(join(amb.projeto, ".sigilo", "config.json"), JSON.stringify({ prompt: "talvez" }));
+    mkdirSync(join(amb.projeto, ".piiveil"));
+    writeFileSync(join(amb.projeto, ".piiveil", "config.json"), JSON.stringify({ prompt: "talvez" }));
     const r = (await sessionStart(base("SessionStart", { source: "startup" }))) as Qualquer;
     assert.match(r.hookSpecificOutput.additionalContext, /\[PESSOA_1\]/);
     assert.match(r.systemMessage, /"prompt"/);

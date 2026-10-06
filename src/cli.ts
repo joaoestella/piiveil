@@ -24,7 +24,7 @@ const HOOKS: Record<string, Hook> = {
 
 /** Resposta usada quando a entrada do hook não pôde ser lida: nunca deixa o dado passar. */
 function saidaDeFalha(evento: string, e: unknown): SaidaHook | null {
-  const motivo = `sigilo: falha ao processar (${descreverErro(e)})`;
+  const motivo = `piiveil: falha ao processar (${descreverErro(e)})`;
   if (evento === "post-tool-use") {
     // Sem a entrada não há como saber o formato da saída para substituí-la;
     // interromper o Claude é a única forma de impedir que ela siga para o modelo.
@@ -59,14 +59,14 @@ function argumento(args: string[], nome: string): string | undefined {
   return i >= 0 ? args[i + 1] : undefined;
 }
 
-const AJUDA = `sigilo ${VERSAO}: pseudonimização reversível de dados pessoais para o Claude Code
+const AJUDA = `piiveil ${VERSAO}: pseudonimização reversível de dados pessoais para o Claude Code
 
-Uso: node dist/sigilo.mjs <comando> [opções]
+Uso: node dist/piiveil.mjs <comando> [opções]
 
 Comandos:
   status                 mostra onde fica o cofre do projeto e quantos dados ele guarda
   limpar                 apaga o cofre do projeto (os tokens antigos deixam de ter valor)
-  init                   cria .sigilo/config.json no projeto, já protegido do git
+  init                   cria .piiveil/config.json no projeto, já protegido do git
   mascarar <arquivo>     imprime o arquivo com os dados pessoais trocados por tokens
   desmascarar <arquivo>  imprime o arquivo com os tokens trocados pelos valores reais
   hook <evento>          uso interno pelos hooks do Claude Code
@@ -76,7 +76,7 @@ Opções:
 `;
 
 const CONFIG_EXEMPLO = {
-  $comentario: "Configuração do sigilo para este projeto. Esta pasta não deve ser versionada.",
+  $comentario: "Configuração do piiveil para este projeto. Esta pasta não deve ser versionada.",
   termos: [],
   nomes: [],
   empresas: [],
@@ -96,7 +96,7 @@ export async function main(args: string[]): Promise<number> {
     case "hook": {
       const evento = resto[0] ?? "";
       if (!HOOKS[evento]) {
-        process.stderr.write(`sigilo: hook desconhecido "${evento}"\n`);
+        process.stderr.write(`piiveil: hook desconhecido "${evento}"\n`);
         return 1;
       }
       const saida = await executarHook(evento, await lerEntrada());
@@ -107,7 +107,7 @@ export async function main(args: string[]): Promise<number> {
       const arquivo = caminhoDoCofre(projeto);
       const { arquivos, avisos, config } = carregarConfig(projeto);
       const linhas = [`projeto: ${projeto}`, `cofre: ${arquivo}${existsSync(arquivo) ? "" : " (ainda não criado)"}`];
-      linhas.push(`chave: ${process.env.SIGILO_SENHA ? "derivada de SIGILO_SENHA" : join(diretorioBase(), "chave")}`);
+      linhas.push(`chave: ${process.env.PIIVEIL_PASSPHRASE ? "derivada de PIIVEIL_PASSPHRASE" : join(diretorioBase(), "chave")}`);
       linhas.push(`ativo: ${config.ativo ? "sim" : "não"}`);
       linhas.push(`configuração: ${arquivos.length ? arquivos.join(", ") : "padrão"}`);
       for (const a of avisos) linhas.push(`aviso: ${a}`);
@@ -123,22 +123,22 @@ export async function main(args: string[]): Promise<number> {
       const havia = await Cofre.limpar(projeto);
       process.stdout.write(
         havia
-          ? "sigilo: valores do cofre apagados. Tokens usados até aqui não serão mais traduzidos e seus números não serão reutilizados.\n"
-          : "sigilo: este projeto não tinha cofre.\n",
+          ? "piiveil: valores do cofre apagados. Tokens usados até aqui não serão mais traduzidos e seus números não serão reutilizados.\n"
+          : "piiveil: este projeto não tinha cofre.\n",
       );
       return 0;
     }
     case "init": {
-      const dir = join(projeto, ".sigilo");
+      const dir = join(projeto, ".piiveil");
       mkdirSync(dir, { recursive: true });
       const gitignore = join(dir, ".gitignore");
       if (!existsSync(gitignore)) writeFileSync(gitignore, "*\n");
       const arquivo = join(dir, "config.json");
       if (existsSync(arquivo)) {
-        process.stdout.write(`sigilo: ${arquivo} já existe.\n`);
+        process.stdout.write(`piiveil: ${arquivo} já existe.\n`);
       } else {
         writeFileSync(arquivo, JSON.stringify(CONFIG_EXEMPLO, null, 2) + "\n");
-        process.stdout.write(`sigilo: criado ${arquivo}\n`);
+        process.stdout.write(`piiveil: criado ${arquivo}\n`);
       }
       return 0;
     }
@@ -170,14 +170,14 @@ export async function main(args: string[]): Promise<number> {
       process.stdout.write(VERSAO + "\n");
       return 0;
     default:
-      process.stderr.write(`sigilo: comando desconhecido "${comando}"\n\n${AJUDA}`);
+      process.stderr.write(`piiveil: comando desconhecido "${comando}"\n\n${AJUDA}`);
       return 1;
   }
 }
 
 const ehExecucaoDireta = (() => {
   const script = process.argv[1] ?? "";
-  return /(?:^|[\\/])(?:cli\.js|sigilo\.mjs)$/.test(script);
+  return /(?:^|[\\/])(?:cli\.js|piiveil\.mjs)$/.test(script);
 })();
 
 if (ehExecucaoDireta) {
@@ -186,7 +186,7 @@ if (ehExecucaoDireta) {
       process.exitCode = codigo;
     },
     (e) => {
-      process.stderr.write(`sigilo: ${descreverErro(e)}\n`);
+      process.stderr.write(`piiveil: ${descreverErro(e)}\n`);
       process.exitCode = 1;
     },
   );

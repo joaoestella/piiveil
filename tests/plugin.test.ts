@@ -37,13 +37,13 @@ describe("pacote do plugin", () => {
     assert.deepEqual(Object.keys(hooks).sort(), Object.keys(eventos).sort());
     for (const [evento, grupos] of Object.entries(hooks) as Array<[string, Array<{ hooks: Array<{ args: string[] }> }>]>) {
       const args = grupos[0]!.hooks[0]!.args;
-      assert.deepEqual(args, ["${CLAUDE_PLUGIN_ROOT}/dist/sigilo.mjs", "hook", eventos[evento]]);
+      assert.deepEqual(args, ["${CLAUDE_PLUGIN_ROOT}/dist/piiveil.mjs", "hook", eventos[evento]]);
     }
   });
 
-  test("dist/sigilo.mjs está atualizado em relação ao código-fonte", async () => {
+  test("dist/piiveil.mjs está atualizado em relação ao código-fonte", async () => {
     const pkg = json("package.json");
-    assert.match(pkg.scripts.bundle, /--outfile=dist\/sigilo\.mjs/);
+    assert.match(pkg.scripts.bundle, /--outfile=dist\/piiveil\.mjs/);
     const r = await build({
       entryPoints: [fileURLToPath(new URL("src/cli.ts", raiz))],
       bundle: true,
@@ -52,14 +52,14 @@ describe("pacote do plugin", () => {
       target: "node18",
       legalComments: "none",
       write: false,
-      outfile: fileURLToPath(new URL("dist/sigilo.mjs", raiz)),
+      outfile: fileURLToPath(new URL("dist/piiveil.mjs", raiz)),
       absWorkingDir: fileURLToPath(raiz),
     });
-    assert.equal(r.outputFiles[0]!.text, ler("dist/sigilo.mjs"), "rode `npm run bundle` e versione o resultado");
+    assert.equal(r.outputFiles[0]!.text, ler("dist/piiveil.mjs"), "rode `npm run bundle` e versione o resultado");
   });
 
   test("o bundle executa", async () => {
-    const { stdout } = await executar(process.execPath, [fileURLToPath(new URL("dist/sigilo.mjs", raiz)), "--version"]);
+    const { stdout } = await executar(process.execPath, [fileURLToPath(new URL("dist/piiveil.mjs", raiz)), "--version"]);
     assert.equal(stdout.trim(), json("package.json").version);
   });
 });

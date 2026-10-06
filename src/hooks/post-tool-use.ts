@@ -31,10 +31,10 @@ export async function postToolUse(entrada: EntradaHook): Promise<SaidaHook | nul
     return { hookSpecificOutput: { hookEventName: "PostToolUse", updatedToolOutput: valor } };
   } catch (e) {
     const aviso =
-      `[sigilo] Conteúdo ocultado: não foi possível pseudonimizá-lo com segurança (${descreverErro(e)}). ` +
+      `[piiveil] Conteúdo ocultado: não foi possível pseudonimizá-lo com segurança (${descreverErro(e)}). ` +
       "Avise o usuário; não tente obter o conteúdo por outro caminho.";
     return {
-      systemMessage: `sigilo: saída da ferramenta ocultada por segurança (${descreverErro(e)})`,
+      systemMessage: `piiveil: saída da ferramenta ocultada por segurança (${descreverErro(e)})`,
       hookSpecificOutput: { hookEventName: "PostToolUse", updatedToolOutput: ocultarTextos(bruto, aviso) },
     };
   }
@@ -77,7 +77,7 @@ export function ocultarTextos(valor: unknown, aviso: string): unknown {
         avisou = true;
         return aviso;
       }
-      return "[sigilo: ocultado]";
+      return "[piiveil: ocultado]";
     }
     if (Array.isArray(v)) return v.map((x) => visitar(x));
     if (v && typeof v === "object") {

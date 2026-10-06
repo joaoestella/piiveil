@@ -1,4 +1,4 @@
-# sigilo
+# piiveil
 
 Plugin para o [Claude Code](https://code.claude.com) que faz **pseudonimização reversível** de dados pessoais.
 O modelo trabalha com tokens como `[PESSOA_1]`, `[CPF_1]` e `[EMPRESA_1]`; você continua vendo os dados reais
@@ -6,9 +6,9 @@ na tela, e os arquivos que o Claude Code grava saem com os dados reais.
 
 O foco são documentos brasileiros (contratos, laudos, peças jurídicas, planilhas financeiras) e a redução da
 exposição de dados pessoais, em linha com a LGPD. Tudo roda localmente: nenhum dado sai da sua máquina por
-causa do sigilo, e o mapa entre tokens e valores fica num cofre cifrado no seu computador.
+causa do piiveil, e o mapa entre tokens e valores fica num cofre cifrado no seu computador.
 
-> **Versão 0.1 (MVP).** Leia a seção [Limitações](#limitações) antes de usar com dados reais. O sigilo reduz
+> **Versão 0.1 (MVP).** Leia a seção [Limitações](#limitações) antes de usar com dados reais. O piiveil reduz
 > o que chega ao modelo, mas não é garantia absoluta nem substitui as medidas de proteção de dados da sua
 > organização.
 
@@ -23,14 +23,14 @@ causa do sigilo, e o mapa entre tokens e valores fica num cofre cifrado no seu c
                                        Write "[PESSOA_1]" ──► (desmascara) ──► arquivo com "Maria da Silva Souza"
 ```
 
-O sigilo usa os hooks do Claude Code:
+O piiveil usa os hooks do Claude Code:
 
 | Hook | O que faz |
 | :- | :- |
 | `PostToolUse` (todas as ferramentas) | Detecta dados pessoais na saída de Read, Grep, Glob, Bash, WebFetch, MCP e das demais ferramentas e troca cada um por um token antes de o modelo ver. Se algo falhar, oculta o conteúdo em vez de deixá-lo passar. |
 | `PreToolUse` (Write, Edit, NotebookEdit, Bash, Grep, Glob, Read) | Troca os tokens pelos valores reais na entrada da ferramenta antes de ela rodar, para que os arquivos gravados e os comandos usem os dados reais. Também bloqueia o Read de PDFs e imagens (ver Limitações). |
 | `MessageDisplay` | Mostra na tela os valores reais no lugar dos tokens. O modelo e a transcrição continuam só com tokens. |
-| `UserPromptSubmit` | Se o que você digitou contém dado pessoal, o prompt é bloqueado (não chega ao modelo) e o sigilo mostra o token que você pode usar no lugar. |
+| `UserPromptSubmit` | Se o que você digitou contém dado pessoal, o prompt é bloqueado (não chega ao modelo) e o piiveil mostra o token que você pode usar no lugar. |
 | `SessionStart` | Explica ao modelo como usar os tokens. |
 
 A mesma pessoa, CPF ou empresa recebe sempre o mesmo token dentro do projeto, em todas as sessões. O que já
@@ -45,8 +45,8 @@ já compilado em `dist/`.
 Dentro do Claude Code:
 
 ```
-/plugin marketplace add joaoestella/sigilo
-/plugin install sigilo@sigilo
+/plugin marketplace add joaoestella/piiveil
+/plugin install piiveil@piiveil
 ```
 
 Enquanto o repositório for privado, a máquina precisa ter acesso a ele pelo git (por exemplo, com
@@ -55,11 +55,11 @@ Enquanto o repositório for privado, a máquina precisa ter acesso a ele pelo gi
 Para testar uma cópia local sem instalar:
 
 ```bash
-git clone https://github.com/joaoestella/sigilo
-claude --plugin-dir ./sigilo
+git clone https://github.com/joaoestella/piiveil
+claude --plugin-dir ./piiveil
 ```
 
-Para conferir se está ativo, rode `/sigilo:status` dentro do Claude Code.
+Para conferir se está ativo, rode `/piiveil:status` dentro do Claude Code.
 
 ## Uso
 
@@ -87,10 +87,10 @@ em face de **[EMPRESA_1]**, CNPJ [CNPJ_1], pelos fatos a seguir.
 ### Ao digitar
 
 O hook de prompt não pode reescrever o que você digita, apenas bloquear. Se você escrever
-`qual o telefone do CPF 111.444.777-35?`, o prompt é barrado e o sigilo responde:
+`qual o telefone do CPF 111.444.777-35?`, o prompt é barrado e o piiveil responde:
 
 ```
-sigilo: o prompt contém 1 dado(s) pessoal(is) e não foi enviado ao modelo.
+piiveil: o prompt contém 1 dado(s) pessoal(is) e não foi enviado ao modelo.
 Reescreva usando os tokens abaixo (a resposta mostrará os valores reais na tela):
   • "111.444.777-35" → use [CPF_1]
 ```
@@ -102,17 +102,17 @@ mascaramento.
 
 | Comando | O que faz |
 | :- | :- |
-| `/sigilo:status` | Mostra onde fica o cofre do projeto e quantos dados ele guarda, por tipo (sem mostrar valores). |
-| `/sigilo:limpar` | Apaga os valores do cofre do projeto. Os tokens antigos deixam de ser traduzidos, e seus números não são reaproveitados. |
+| `/piiveil:status` | Mostra onde fica o cofre do projeto e quantos dados ele guarda, por tipo (sem mostrar valores). |
+| `/piiveil:limpar` | Apaga os valores do cofre do projeto. Os tokens antigos deixam de ser traduzidos, e seus números não são reaproveitados. |
 
 Os mesmos comandos existem na linha de comando, junto com outros úteis para conferir a detecção:
 
 ```bash
-node dist/sigilo.mjs status
-node dist/sigilo.mjs limpar
-node dist/sigilo.mjs init                      # cria .sigilo/config.json no projeto
-node dist/sigilo.mjs mascarar arquivo.txt      # mostra como o modelo veria o arquivo
-node dist/sigilo.mjs desmascarar arquivo.txt   # troca tokens pelos valores reais
+node dist/piiveil.mjs status
+node dist/piiveil.mjs limpar
+node dist/piiveil.mjs init                      # cria .piiveil/config.json no projeto
+node dist/piiveil.mjs mascarar arquivo.txt      # mostra como o modelo veria o arquivo
+node dist/piiveil.mjs desmascarar arquivo.txt   # troca tokens pelos valores reais
 ```
 
 Use `--projeto <pasta>` para apontar outro projeto.
@@ -137,9 +137,9 @@ Use `--projeto <pasta>` para apontar outro projeto.
 
 ## Configuração
 
-Rode `node dist/sigilo.mjs init` na pasta do projeto, ou crie `.sigilo/config.json` à mão (há um exemplo em
+Rode `node dist/piiveil.mjs init` na pasta do projeto, ou crie `.piiveil/config.json` à mão (há um exemplo em
 [`exemplos/config.json`](exemplos/config.json)). Também é possível ter uma configuração global em
-`~/.sigilo/config.json`; as listas das duas são somadas e os valores simples do projeto prevalecem.
+`~/.piiveil/config.json`; as listas das duas são somadas e os valores simples do projeto prevalecem.
 
 | Opção | Padrão | Descrição |
 | :- | :- | :- |
@@ -152,21 +152,21 @@ Rode `node dist/sigilo.mjs init` na pasta do projeto, ou crie `.sigilo/config.js
 | `prompt` | `"bloquear"` | `"bloquear"`, `"avisar"` (deixa passar e avisa) ou `"desligado"`. |
 | `bloquearArquivosBinarios` | `true` | Impede o Read de PDFs e imagens. |
 | `desmascararBash` | `true` | Troca tokens por valores reais nos comandos do Bash. |
-| `ativo` | `true` | Liga ou desliga o sigilo no projeto. |
+| `ativo` | `true` | Liga ou desliga o piiveil no projeto. |
 
-A configuração pode conter nomes reais. **Não versione a pasta `.sigilo/`**: o `init` já cria um `.gitignore`
+A configuração pode conter nomes reais. **Não versione a pasta `.piiveil/`**: o `init` já cria um `.gitignore`
 dentro dela.
 
 ## Cofre e chave
 
-- O cofre de cada projeto fica em `~/.sigilo/cofres/<id>.cofre`, **fora da pasta do projeto**, para que não
+- O cofre de cada projeto fica em `~/.piiveil/cofres/<id>.cofre`, **fora da pasta do projeto**, para que não
   seja versionado nem copiado junto por acidente. O `<id>` é derivado do caminho do projeto.
 - O conteúdo é cifrado com AES-256-GCM, que também detecta adulteração. A gravação é atômica e protegida por
   trava, já que vários hooks podem rodar ao mesmo tempo.
-- A chave é gerada aleatoriamente na primeira vez e guardada em `~/.sigilo/chave` com permissão `600`.
-  Alternativamente, defina a variável `SIGILO_SENHA` para derivar a chave de uma senha (scrypt); nesse caso a
+- A chave é gerada aleatoriamente na primeira vez e guardada em `~/.piiveil/chave` com permissão `600`.
+  Alternativamente, defina a variável `PIIVEIL_PASSPHRASE` para derivar a chave de uma senha (scrypt); nesse caso a
   chave não fica em disco, mas a senha precisa estar no ambiente de cada sessão.
-- `SIGILO_HOME` muda a pasta base (`~/.sigilo`).
+- `PIIVEIL_HOME` muda a pasta base (`~/.piiveil`).
 - Se a chave for perdida, os tokens não podem mais ser traduzidos. Os arquivos já gravados não são afetados,
   pois contêm os dados reais.
 
@@ -194,7 +194,7 @@ Algumas destas limitações vêm do próprio Claude Code e foram confirmadas tes
   ao modelo um `old_string` sem tokens (o `new_string` pode tê-los) ou, se não houver trecho assim, a
   reescrita do arquivo com Write. Quando o hook roda, a troca funciona, e há teste para isso.
 - **PDFs e imagens** lidos pelo Read chegam ao modelo como documento ou imagem, sem texto para mascarar. Por
-  isso o sigilo bloqueia esse Read por padrão; extraia o texto pelo Bash (`pdftotext arquivo.pdf -`), cuja
+  isso o piiveil bloqueia esse Read por padrão; extraia o texto pelo Bash (`pdftotext arquivo.pdf -`), cuja
   saída é mascarada.
 - **Detecção de nomes por heurística.** Nomes que não começam por um prenome da lista, nomes estrangeiros e
   prenomes sozinhos (sem Sr., Dra. etc.) podem passar. Também há falsos positivos, como nomes de ruas que
@@ -204,7 +204,7 @@ Algumas destas limitações vêm do próprio Claude Code e foram confirmadas tes
   porque cada token volta exatamente para o texto original.
 - **Comandos do Bash recebem os dados reais.** Um comando como `curl` com um token enviaria o valor real
   para fora. Revise os comandos antes de aprovar, ou defina `desmascararBash: false`. Valores com aspas ou
-  caracteres especiais do shell não são inseridos em comandos: o sigilo nega a execução.
+  caracteres especiais do shell não são inseridos em comandos: o piiveil nega a execução.
 - **Se o hook não conseguir nem iniciar** (por exemplo, sem `node` no `PATH`), o Claude Code trata isso como
   erro não bloqueante e a saída original segue para o modelo. Quando o hook roda e algo dá errado, a falha é
   fechada: o conteúdo é ocultado ou a sessão é interrompida.
@@ -215,14 +215,14 @@ Algumas destas limitações vêm do próprio Claude Code e foram confirmadas tes
   ferramenta chega em `tool_response` (objeto com o formato de cada ferramenta), e não em `tool_output`
   (texto), e `updatedToolOutput` precisa manter esse formato, senão é ignorado; o `MessageDisplay` recebe o
   texto no campo `delta`; o `UserPromptSubmit` não tem `suppressOriginalPrompt`, mas um prompt bloqueado já é
-  descartado sem chegar ao modelo. O sigilo aceita as duas formas onde há diferença.
+  descartado sem chegar ao modelo. O piiveil aceita as duas formas onde há diferença.
 
 ### Sobre a LGPD
 
 Pseudonimização, na definição da LGPD (art. 13, § 4º), é o tratamento pelo qual um dado perde a possibilidade
 de associação a um indivíduo, senão pelo uso de informação adicional mantida separadamente em ambiente
-controlado e seguro. É o que o sigilo faz em relação ao modelo: o cofre é essa informação adicional e fica só
-na sua máquina. Dados pseudonimizados continuam sendo dados pessoais, e o uso do sigilo não dispensa as demais
+controlado e seguro. É o que o piiveil faz em relação ao modelo: o cofre é essa informação adicional e fica só
+na sua máquina. Dados pseudonimizados continuam sendo dados pessoais, e o uso do piiveil não dispensa as demais
 obrigações (base legal, contratos com fornecedores, registro das operações, orientação do encarregado). Este
 projeto não é aconselhamento jurídico.
 
@@ -231,16 +231,16 @@ projeto não é aconselhamento jurídico.
 ```bash
 npm install
 npm test          # compila com tsc e roda os testes (node:test)
-npm run bundle    # gera dist/sigilo.mjs com esbuild
+npm run bundle    # gera dist/piiveil.mjs com esbuild
 ```
 
-O `dist/sigilo.mjs` é versionado porque a instalação de plugins não executa etapa de build; um teste falha se
+O `dist/piiveil.mjs` é versionado porque a instalação de plugins não executa etapa de build; um teste falha se
 ele estiver desatualizado em relação a `src/`.
 
 ```
 .claude-plugin/   plugin.json e marketplace.json
 hooks/hooks.json  registro dos hooks
-skills/           comandos /sigilo:status e /sigilo:limpar
+skills/           comandos /piiveil:status e /piiveil:limpar
 src/detectors/    detectores, validação de dígitos e lista de prenomes
 src/vault/        criptografia e cofre
 src/hooks/        um arquivo por hook

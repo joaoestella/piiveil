@@ -39,7 +39,7 @@ export async function preToolUse(entrada: EntradaHook): Promise<SaidaHook | null
   const bloquearRead = (caminho: string): SaidaHook | null =>
     ferramenta === "Read" && ctx.config.bloquearArquivosBinarios && EXTENSOES_BINARIAS.has(extname(caminho).toLowerCase())
       ? negar(
-          "sigilo: PDFs e imagens lidos pelo Read chegam ao modelo sem pseudonimização. " +
+          "piiveil: PDFs e imagens lidos pelo Read chegam ao modelo sem pseudonimização. " +
             "Extraia o texto pelo Bash (por exemplo, `pdftotext arquivo.pdf -`), cuja saída é mascarada, " +
             "ou peça ao usuário para desativar a opção bloquearArquivosBinarios.",
         )
@@ -57,7 +57,7 @@ export async function preToolUse(entrada: EntradaHook): Promise<SaidaHook | null
   try {
     cofre = Cofre.abrir(ctx.projeto);
   } catch (e) {
-    return negar(`sigilo: não foi possível abrir o cofre para restaurar os dados reais (${descreverErro(e)}).`);
+    return negar(`piiveil: não foi possível abrir o cofre para restaurar os dados reais (${descreverErro(e)}).`);
   }
 
   let novo: Record<string, unknown>;
@@ -79,7 +79,7 @@ export async function preToolUse(entrada: EntradaHook): Promise<SaidaHook | null
       const real = cofre.valorDe(m[0]);
       if (real !== undefined && PERIGOSOS_NO_SHELL.test(real)) {
         return negar(
-          `sigilo: o valor de ${m[0]} contém aspas ou caracteres especiais do shell e não pode ser inserido ` +
+          `piiveil: o valor de ${m[0]} contém aspas ou caracteres especiais do shell e não pode ser inserido ` +
             "com segurança no comando. Grave o conteúdo com Write ou Edit em vez de passá-lo pela linha de comando.",
         );
       }
@@ -100,7 +100,7 @@ export async function preToolUse(entrada: EntradaHook): Promise<SaidaHook | null
       updatedInput: novo,
       ...(desconhecidos.length
         ? {
-            additionalContext: `sigilo: os tokens ${desconhecidos.join(", ")} não existem no cofre e foram mantidos como texto literal.`,
+            additionalContext: `piiveil: os tokens ${desconhecidos.join(", ")} não existem no cofre e foram mantidos como texto literal.`,
           }
         : {}),
     },

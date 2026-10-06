@@ -1,14 +1,14 @@
 {
-  "name": "sigilo",
-  "displayName": "Sigilo",
+  "name": "piiveil",
+  "displayName": "PII Veil",
   "version": "0.1.0",
   "description": "Pseudonimização reversível de dados pessoais: o modelo vê tokens como [PESSOA_1] e [CPF_1], você vê e grava os dados reais. Foco em documentos brasileiros e na LGPD.",
   "author": {
     "name": "João Vítor Estella",
     "url": "https://github.com/joaoestella"
   },
-  "homepage": "https://github.com/joaoestella/sigilo",
-  "repository": "https://github.com/joaoestella/sigilo",
+  "homepage": "https://github.com/joaoestella/piiveil",
+  "repository": "https://github.com/joaoestella/piiveil",
   "license": "MIT",
   "keywords": ["privacidade", "lgpd", "pseudonimizacao", "dados-pessoais", "cpf", "cnpj", "juridico"]
 }

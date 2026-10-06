@@ -39,7 +39,7 @@ export interface OpcoesDeteccao {
 /** Trechos que, por padrão, não são dados pessoais apesar de parecerem nomes. */
 const IGNORAR_PADRAO = ["Maria da Penha", "Claude Code"];
 
-/** Padrão dos tokens gerados pelo sigilo, ex.: [PESSOA_1]. */
+/** Padrão dos tokens gerados pelo piiveil, ex.: [PESSOA_1]. */
 export const PADRAO_TOKEN = /\[(?:PESSOA|EMPRESA|CPF|CNPJ|EMAIL|TELEFONE|CEP|CARTAO|PROCESSO|OAB|PIS|RG|TERMO)_\d+\]/g;
 
 export function criarDetector(opcoes: OpcoesDeteccao = {}): (texto: string) => Achado[] {

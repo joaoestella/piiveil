@@ -20,9 +20,9 @@ export { ErroCofre } from "./cripto.js";
 /**
  * Cofre: mapa token -> valor real, um por projeto, cifrado com AES-256-GCM.
  *
- * O arquivo fica fora da pasta do projeto (em ~/.sigilo/cofres/), de modo que
+ * O arquivo fica fora da pasta do projeto (em ~/.piiveil/cofres/), de modo que
  * não pode ser versionado por acidente. A chave é um arquivo aleatório em
- * ~/.sigilo/chave, ou é derivada da variável SIGILO_SENHA quando ela existe.
+ * ~/.piiveil/chave, ou é derivada da variável PIIVEIL_PASSPHRASE quando ela existe.
  */
 
 export interface Entrada {
@@ -39,7 +39,7 @@ interface Conteudo {
 }
 
 export function diretorioBase(): string {
-  return process.env.SIGILO_HOME ? resolve(process.env.SIGILO_HOME) : join(homedir(), ".sigilo");
+  return process.env.PIIVEIL_HOME ? resolve(process.env.PIIVEIL_HOME) : join(homedir(), ".piiveil");
 }
 
 function garantirDiretorio(dir: string): void {
@@ -48,7 +48,7 @@ function garantirDiretorio(dir: string): void {
 
 /** Lê (ou cria na primeira vez) o material da chave do cofre. */
 export function obterMaterialChave(): MaterialChave {
-  const senha = process.env.SIGILO_SENHA;
+  const senha = process.env.PIIVEIL_PASSPHRASE;
   if (senha && senha.length > 0) return { modo: 1, segredo: Buffer.from(senha, "utf8") };
   const base = diretorioBase();
   const arquivo = join(base, "chave");

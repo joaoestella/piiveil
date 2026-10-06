@@ -4,8 +4,8 @@ build/
 coverage/
 *.tsbuildinfo
 
-# Cofre, chaves e configuração local do sigilo (nunca versionar)
-.sigilo/
+# Cofre, chaves e configuração local do piiveil (nunca versionar)
+.piiveil/
 *.cofre
 *.chave
 *.key

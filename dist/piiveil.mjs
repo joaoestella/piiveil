@@ -20,7 +20,7 @@ import { dirname, join, resolve } from "node:path";
 
 // src/vault/cripto.ts
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:crypto";
-var MAGICO = Buffer.from("SGL1", "ascii");
+var MAGICO = Buffer.from("PIV1", "ascii");
 var TAM_CABECALHO = 4 + 1 + 16 + 12;
 var TAM_TAG = 16;
 var ErroCofre = class extends Error {
@@ -54,7 +54,7 @@ function decifrar(dados, material) {
   const modo = lerModo(dados);
   if (modo !== material.modo) {
     throw new ErroCofre(
-      modo === 1 ? "o cofre foi criado com senha; defina SIGILO_SENHA" : "o cofre foi criado com arquivo de chave; remova SIGILO_SENHA ou limpe o cofre"
+      modo === 1 ? "o cofre foi criado com senha; defina PIIVEIL_PASSPHRASE" : "o cofre foi criado com arquivo de chave; remova PIIVEIL_PASSPHRASE ou limpe o cofre"
     );
   }
   const cabecalho = dados.subarray(0, TAM_CABECALHO);
@@ -106,13 +106,13 @@ var PRIORIDADE = {
 
 // src/vault/cofre.ts
 function diretorioBase() {
-  return process.env.SIGILO_HOME ? resolve(process.env.SIGILO_HOME) : join(homedir(), ".sigilo");
+  return process.env.PIIVEIL_HOME ? resolve(process.env.PIIVEIL_HOME) : join(homedir(), ".piiveil");
 }
 function garantirDiretorio(dir) {
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true, mode: 448 });
 }
 function obterMaterialChave() {
-  const senha = process.env.SIGILO_SENHA;
+  const senha = process.env.PIIVEIL_PASSPHRASE;
   if (senha && senha.length > 0) return { modo: 1, segredo: Buffer.from(senha, "utf8") };
   const base = diretorioBase();
   const arquivo = join(base, "chave");
@@ -319,7 +319,7 @@ var CONFIG_PADRAO = {
   desmascararBash: true
 };
 function arquivosDeConfig(projeto) {
-  return [join2(diretorioBase(), "config.json"), join2(resolve2(projeto), ".sigilo", "config.json")];
+  return [join2(diretorioBase(), "config.json"), join2(resolve2(projeto), ".piiveil", "config.json")];
 }
 var LISTAS = ["termos", "nomes", "empresas", "prenomes", "ignorar"];
 function carregarConfig(projeto) {
@@ -1735,9 +1735,9 @@ async function postToolUse(entrada) {
     if (!alterado) return null;
     return { hookSpecificOutput: { hookEventName: "PostToolUse", updatedToolOutput: valor } };
   } catch (e) {
-    const aviso = `[sigilo] Conte\xFAdo ocultado: n\xE3o foi poss\xEDvel pseudonimiz\xE1-lo com seguran\xE7a (${descreverErro(e)}). Avise o usu\xE1rio; n\xE3o tente obter o conte\xFAdo por outro caminho.`;
+    const aviso = `[piiveil] Conte\xFAdo ocultado: n\xE3o foi poss\xEDvel pseudonimiz\xE1-lo com seguran\xE7a (${descreverErro(e)}). Avise o usu\xE1rio; n\xE3o tente obter o conte\xFAdo por outro caminho.`;
     return {
-      systemMessage: `sigilo: sa\xEDda da ferramenta ocultada por seguran\xE7a (${descreverErro(e)})`,
+      systemMessage: `piiveil: sa\xEDda da ferramenta ocultada por seguran\xE7a (${descreverErro(e)})`,
       hookSpecificOutput: { hookEventName: "PostToolUse", updatedToolOutput: ocultarTextos(bruto, aviso) }
     };
   }
@@ -1770,7 +1770,7 @@ function ocultarTextos(valor, aviso) {
         avisou = true;
         return aviso;
       }
-      return "[sigilo: ocultado]";
+      return "[piiveil: ocultado]";
     }
     if (Array.isArray(v)) return v.map((x) => visitar(x));
     if (v && typeof v === "object") {
@@ -1800,7 +1800,7 @@ async function preToolUse(entrada) {
   const ferramenta = String(entrada.tool_name ?? "");
   const input = entrada.tool_input ?? {};
   const bloquearRead = (caminho) => ferramenta === "Read" && ctx.config.bloquearArquivosBinarios && EXTENSOES_BINARIAS.has(extname(caminho).toLowerCase()) ? negar(
-    "sigilo: PDFs e imagens lidos pelo Read chegam ao modelo sem pseudonimiza\xE7\xE3o. Extraia o texto pelo Bash (por exemplo, `pdftotext arquivo.pdf -`), cuja sa\xEDda \xE9 mascarada, ou pe\xE7a ao usu\xE1rio para desativar a op\xE7\xE3o bloquearArquivosBinarios."
+    "piiveil: PDFs e imagens lidos pelo Read chegam ao modelo sem pseudonimiza\xE7\xE3o. Extraia o texto pelo Bash (por exemplo, `pdftotext arquivo.pdf -`), cuja sa\xEDda \xE9 mascarada, ou pe\xE7a ao usu\xE1rio para desativar a op\xE7\xE3o bloquearArquivosBinarios."
   ) : null;
   if (ferramenta === "Bash" && !ctx.config.desmascararBash) return null;
   const serializado = JSON.stringify(input);
@@ -1812,7 +1812,7 @@ async function preToolUse(entrada) {
   try {
     cofre = Cofre.abrir(ctx.projeto);
   } catch (e) {
-    return negar(`sigilo: n\xE3o foi poss\xEDvel abrir o cofre para restaurar os dados reais (${descreverErro(e)}).`);
+    return negar(`piiveil: n\xE3o foi poss\xEDvel abrir o cofre para restaurar os dados reais (${descreverErro(e)}).`);
   }
   let novo;
   if (ferramenta === "Grep") {
@@ -1830,7 +1830,7 @@ async function preToolUse(entrada) {
       const real = cofre.valorDe(m[0]);
       if (real !== void 0 && PERIGOSOS_NO_SHELL.test(real)) {
         return negar(
-          `sigilo: o valor de ${m[0]} cont\xE9m aspas ou caracteres especiais do shell e n\xE3o pode ser inserido com seguran\xE7a no comando. Grave o conte\xFAdo com Write ou Edit em vez de pass\xE1-lo pela linha de comando.`
+          `piiveil: o valor de ${m[0]} cont\xE9m aspas ou caracteres especiais do shell e n\xE3o pode ser inserido com seguran\xE7a no comando. Grave o conte\xFAdo com Write ou Edit em vez de pass\xE1-lo pela linha de comando.`
         );
       }
     }
@@ -1847,7 +1847,7 @@ async function preToolUse(entrada) {
       hookEventName: "PreToolUse",
       updatedInput: novo,
       ...desconhecidos.length ? {
-        additionalContext: `sigilo: os tokens ${desconhecidos.join(", ")} n\xE3o existem no cofre e foram mantidos como texto literal.`
+        additionalContext: `piiveil: os tokens ${desconhecidos.join(", ")} n\xE3o existem no cofre e foram mantidos como texto literal.`
       } : {}
     }
   };
@@ -1892,8 +1892,8 @@ async function userPromptSubmit(entrada) {
       }))
     );
   } catch (e) {
-    if (ctx.config.prompt === "avisar") return { systemMessage: `sigilo: n\xE3o foi poss\xEDvel verificar o prompt (${descreverErro(e)})` };
-    return { decision: "block", reason: `sigilo: n\xE3o foi poss\xEDvel verificar o prompt (${descreverErro(e)}). Ele n\xE3o foi enviado.` };
+    if (ctx.config.prompt === "avisar") return { systemMessage: `piiveil: n\xE3o foi poss\xEDvel verificar o prompt (${descreverErro(e)})` };
+    return { decision: "block", reason: `piiveil: n\xE3o foi poss\xEDvel verificar o prompt (${descreverErro(e)}). Ele n\xE3o foi enviado.` };
   }
   if (substituicoes.length === 0) return null;
   const unicos = [...new Map(substituicoes.map((s) => [s.token, s])).values()];
@@ -1901,11 +1901,11 @@ async function userPromptSubmit(entrada) {
   if (unicos.length > MAX_EXEMPLOS) linhas.push(`  \u2022 \u2026 e mais ${unicos.length - MAX_EXEMPLOS}`);
   if (ctx.config.prompt === "avisar") {
     return {
-      systemMessage: `sigilo: aten\xE7\xE3o, o prompt cont\xE9m ${unicos.length} dado(s) pessoal(is) e foi enviado ao modelo sem pseudonimiza\xE7\xE3o.`
+      systemMessage: `piiveil: aten\xE7\xE3o, o prompt cont\xE9m ${unicos.length} dado(s) pessoal(is) e foi enviado ao modelo sem pseudonimiza\xE7\xE3o.`
     };
   }
   const motivo = [
-    `sigilo: o prompt cont\xE9m ${unicos.length} dado(s) pessoal(is) e n\xE3o foi enviado ao modelo.`,
+    `piiveil: o prompt cont\xE9m ${unicos.length} dado(s) pessoal(is) e n\xE3o foi enviado ao modelo.`,
     "Reescreva usando os tokens abaixo (a resposta mostrar\xE1 os valores reais na tela):",
     ...linhas,
     "Para textos longos, salve o conte\xFAdo num arquivo e pe\xE7a para l\xEA-lo: a leitura passa pelo mascaramento."
@@ -1915,7 +1915,7 @@ async function userPromptSubmit(entrada) {
 
 // src/hooks/session-start.ts
 var INSTRUCOES_MODELO = [
-  "O plugin sigilo est\xE1 ativo neste projeto: dados pessoais nas sa\xEDdas das ferramentas foram trocados por tokens",
+  "O plugin piiveil est\xE1 ativo neste projeto: dados pessoais nas sa\xEDdas das ferramentas foram trocados por tokens",
   "como [PESSOA_1], [CPF_2], [EMPRESA_1], [EMAIL_3] e [PROCESSO_1].",
   "Trate cada token como o pr\xF3prio dado. Ao escrever arquivos, editar ou rodar comandos, use os tokens exatamente",
   "como aparecem (com colchetes, mai\xFAsculas e n\xFAmero): eles s\xE3o trocados pelos valores reais antes da execu\xE7\xE3o,",
@@ -1932,7 +1932,7 @@ async function sessionStart(entrada) {
   const saida = {
     hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: INSTRUCOES_MODELO }
   };
-  if (ctx.avisos.length) saida.systemMessage = `sigilo: problemas na configura\xE7\xE3o:
+  if (ctx.avisos.length) saida.systemMessage = `piiveil: problemas na configura\xE7\xE3o:
 ${ctx.avisos.join("\n")}`;
   return saida;
 }
@@ -1946,7 +1946,7 @@ var HOOKS = {
   "session-start": sessionStart
 };
 function saidaDeFalha(evento, e) {
-  const motivo = `sigilo: falha ao processar (${descreverErro(e)})`;
+  const motivo = `piiveil: falha ao processar (${descreverErro(e)})`;
   if (evento === "post-tool-use") {
     return { continue: false, stopReason: `${motivo}. A sess\xE3o foi interrompida para proteger os dados.`, systemMessage: motivo };
   }
@@ -1975,14 +1975,14 @@ function argumento(args, nome) {
   const i = args.indexOf(nome);
   return i >= 0 ? args[i + 1] : void 0;
 }
-var AJUDA = `sigilo ${VERSAO}: pseudonimiza\xE7\xE3o revers\xEDvel de dados pessoais para o Claude Code
+var AJUDA = `piiveil ${VERSAO}: pseudonimiza\xE7\xE3o revers\xEDvel de dados pessoais para o Claude Code
 
-Uso: node dist/sigilo.mjs <comando> [op\xE7\xF5es]
+Uso: node dist/piiveil.mjs <comando> [op\xE7\xF5es]
 
 Comandos:
   status                 mostra onde fica o cofre do projeto e quantos dados ele guarda
   limpar                 apaga o cofre do projeto (os tokens antigos deixam de ter valor)
-  init                   cria .sigilo/config.json no projeto, j\xE1 protegido do git
+  init                   cria .piiveil/config.json no projeto, j\xE1 protegido do git
   mascarar <arquivo>     imprime o arquivo com os dados pessoais trocados por tokens
   desmascarar <arquivo>  imprime o arquivo com os tokens trocados pelos valores reais
   hook <evento>          uso interno pelos hooks do Claude Code
@@ -1991,7 +1991,7 @@ Op\xE7\xF5es:
   --projeto <pasta>      pasta do projeto (padr\xE3o: CLAUDE_PROJECT_DIR ou a pasta atual)
 `;
 var CONFIG_EXEMPLO = {
-  $comentario: "Configura\xE7\xE3o do sigilo para este projeto. Esta pasta n\xE3o deve ser versionada.",
+  $comentario: "Configura\xE7\xE3o do piiveil para este projeto. Esta pasta n\xE3o deve ser versionada.",
   termos: [],
   nomes: [],
   empresas: [],
@@ -2009,7 +2009,7 @@ async function main(args) {
     case "hook": {
       const evento = resto[0] ?? "";
       if (!HOOKS[evento]) {
-        process.stderr.write(`sigilo: hook desconhecido "${evento}"
+        process.stderr.write(`piiveil: hook desconhecido "${evento}"
 `);
         return 1;
       }
@@ -2021,7 +2021,7 @@ async function main(args) {
       const arquivo = caminhoDoCofre(projeto);
       const { arquivos, avisos, config } = carregarConfig(projeto);
       const linhas = [`projeto: ${projeto}`, `cofre: ${arquivo}${existsSync4(arquivo) ? "" : " (ainda n\xE3o criado)"}`];
-      linhas.push(`chave: ${process.env.SIGILO_SENHA ? "derivada de SIGILO_SENHA" : join3(diretorioBase(), "chave")}`);
+      linhas.push(`chave: ${process.env.PIIVEIL_PASSPHRASE ? "derivada de PIIVEIL_PASSPHRASE" : join3(diretorioBase(), "chave")}`);
       linhas.push(`ativo: ${config.ativo ? "sim" : "n\xE3o"}`);
       linhas.push(`configura\xE7\xE3o: ${arquivos.length ? arquivos.join(", ") : "padr\xE3o"}`);
       for (const a of avisos) linhas.push(`aviso: ${a}`);
@@ -2036,22 +2036,22 @@ async function main(args) {
     case "limpar": {
       const havia = await Cofre.limpar(projeto);
       process.stdout.write(
-        havia ? "sigilo: valores do cofre apagados. Tokens usados at\xE9 aqui n\xE3o ser\xE3o mais traduzidos e seus n\xFAmeros n\xE3o ser\xE3o reutilizados.\n" : "sigilo: este projeto n\xE3o tinha cofre.\n"
+        havia ? "piiveil: valores do cofre apagados. Tokens usados at\xE9 aqui n\xE3o ser\xE3o mais traduzidos e seus n\xFAmeros n\xE3o ser\xE3o reutilizados.\n" : "piiveil: este projeto n\xE3o tinha cofre.\n"
       );
       return 0;
     }
     case "init": {
-      const dir = join3(projeto, ".sigilo");
+      const dir = join3(projeto, ".piiveil");
       mkdirSync2(dir, { recursive: true });
       const gitignore = join3(dir, ".gitignore");
       if (!existsSync4(gitignore)) writeFileSync2(gitignore, "*\n");
       const arquivo = join3(dir, "config.json");
       if (existsSync4(arquivo)) {
-        process.stdout.write(`sigilo: ${arquivo} j\xE1 existe.
+        process.stdout.write(`piiveil: ${arquivo} j\xE1 existe.
 `);
       } else {
         writeFileSync2(arquivo, JSON.stringify(CONFIG_EXEMPLO, null, 2) + "\n");
-        process.stdout.write(`sigilo: criado ${arquivo}
+        process.stdout.write(`piiveil: criado ${arquivo}
 `);
       }
       return 0;
@@ -2085,7 +2085,7 @@ async function main(args) {
       process.stdout.write(VERSAO + "\n");
       return 0;
     default:
-      process.stderr.write(`sigilo: comando desconhecido "${comando}"
+      process.stderr.write(`piiveil: comando desconhecido "${comando}"
 
 ${AJUDA}`);
       return 1;
@@ -2093,7 +2093,7 @@ ${AJUDA}`);
 }
 var ehExecucaoDireta = (() => {
   const script = process.argv[1] ?? "";
-  return /(?:^|[\\/])(?:cli\.js|sigilo\.mjs)$/.test(script);
+  return /(?:^|[\\/])(?:cli\.js|piiveil\.mjs)$/.test(script);
 })();
 if (ehExecucaoDireta) {
   main(process.argv.slice(2)).then(
@@ -2101,7 +2101,7 @@ if (ehExecucaoDireta) {
       process.exitCode = codigo;
     },
     (e) => {
-      process.stderr.write(`sigilo: ${descreverErro(e)}
+      process.stderr.write(`piiveil: ${descreverErro(e)}
 `);
       process.exitCode = 1;
     }

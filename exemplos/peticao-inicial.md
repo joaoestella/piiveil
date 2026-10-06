@@ -1,6 +1,6 @@
 # Petição inicial (exemplo fictício)
 
-> Documento de exemplo do sigilo. Todos os nomes, números e endereços são inventados; os números de documento
+> Documento de exemplo do piiveil. Todos os nomes, números e endereços são inventados; os números de documento
 > têm dígitos verificadores válidos só para que os detectores os reconheçam.
 
 EXCELENTÍSSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO DA 3ª VARA CÍVEL DA COMARCA DE BELO HORIZONTE/MG

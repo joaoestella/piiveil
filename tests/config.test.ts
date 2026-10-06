@@ -9,7 +9,7 @@ describe("configuração", () => {
   let amb: ReturnType<typeof ambienteTemporario>;
   beforeEach(() => {
     amb = ambienteTemporario();
-    mkdirSync(join(amb.projeto, ".sigilo"), { recursive: true });
+    mkdirSync(join(amb.projeto, ".piiveil"), { recursive: true });
     mkdirSync(amb.home, { recursive: true });
   });
   afterEach(() => amb.limpar());
@@ -22,7 +22,7 @@ describe("configuração", () => {
 
   test("soma listas da configuração global e do projeto; o projeto prevalece nos valores simples", () => {
     writeFileSync(join(amb.home, "config.json"), JSON.stringify({ termos: ["Global"], prompt: "avisar" }));
-    writeFileSync(join(amb.projeto, ".sigilo", "config.json"), JSON.stringify({ termos: ["Local"], prompt: "desligado" }));
+    writeFileSync(join(amb.projeto, ".piiveil", "config.json"), JSON.stringify({ termos: ["Local"], prompt: "desligado" }));
     const { config } = carregarConfig(amb.projeto);
     assert.deepEqual(config.termos, ["Global", "Local"]);
     assert.equal(config.prompt, "desligado");
@@ -30,7 +30,7 @@ describe("configuração", () => {
 
   test("valores inválidos geram aviso e são ignorados", () => {
     writeFileSync(
-      join(amb.projeto, ".sigilo", "config.json"),
+      join(amb.projeto, ".piiveil", "config.json"),
       JSON.stringify({ termos: "não é lista", tiposDesativados: ["XYZ"], ativo: "sim", outra: 1 }),
     );
     const { config, avisos } = carregarConfig(amb.projeto);
@@ -39,7 +39,7 @@ describe("configuração", () => {
   });
 
   test("JSON quebrado não derruba o carregamento", () => {
-    writeFileSync(join(amb.projeto, ".sigilo", "config.json"), "{ termos: ");
+    writeFileSync(join(amb.projeto, ".piiveil", "config.json"), "{ termos: ");
     const { config, avisos } = carregarConfig(amb.projeto);
     assert.deepEqual(config, CONFIG_PADRAO);
     assert.match(avisos[0] ?? "", /JSON inválido/);

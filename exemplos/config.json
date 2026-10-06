@@ -1,5 +1,5 @@
 {
-  "$comentario": "Exemplo de .sigilo/config.json. Copie para a pasta .sigilo/ do seu projeto e ajuste.",
+  "$comentario": "Exemplo de .piiveil/config.json. Copie para a pasta .piiveil/ do seu projeto e ajuste.",
   "termos": ["Operação Fênix", "Fazenda Boa Esperança"],
   "nomes": ["Zé do Caminhão"],
   "empresas": ["Padaria Pão Dourado"],

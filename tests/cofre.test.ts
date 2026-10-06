@@ -15,7 +15,7 @@ describe("criptografia", () => {
   const chave = { modo: 0 as const, segredo: Buffer.alloc(32, 7) };
 
   test("cifra e decifra", () => {
-    const claro = Buffer.from("dados sigilosos: Maria", "utf8");
+    const claro = Buffer.from("dados confidenciais: Maria", "utf8");
     const c = cifrar(claro, chave);
     assert.ok(!c.includes(Buffer.from("Maria")));
     assert.deepEqual(decifrar(c, chave), claro);
@@ -122,7 +122,7 @@ describe("cofre", () => {
 
   test("trava evita perda de tokens com processos concorrentes", async () => {
     const script = fileURLToPath(new URL("./helpers/processo-concorrente.js", import.meta.url));
-    const env = { ...process.env, SIGILO_HOME: amb.home };
+    const env = { ...process.env, PIIVEIL_HOME: amb.home };
     await Promise.all(
       ["a", "b", "c", "d"].map((p) => executar(process.execPath, [script, amb.projeto, p, "15"], { env })),
     );

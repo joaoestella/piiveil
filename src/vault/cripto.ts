@@ -2,11 +2,11 @@ import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:
 
 /**
  * Formato do arquivo cifrado:
- *   "SGL1" (4) | modo (1) | sal (16) | iv (12) | tag (16) | texto cifrado
+ *   "PIV1" (4) | modo (1) | sal (16) | iv (12) | tag (16) | texto cifrado
  * modo 0 = chave aleatória guardada em arquivo; modo 1 = chave derivada de senha (scrypt).
  * O cabeçalho inteiro entra como dado autenticado (AAD) do AES-256-GCM.
  */
-const MAGICO = Buffer.from("SGL1", "ascii");
+const MAGICO = Buffer.from("PIV1", "ascii");
 const TAM_CABECALHO = 4 + 1 + 16 + 12;
 const TAM_TAG = 16;
 
@@ -54,8 +54,8 @@ export function decifrar(dados: Buffer, material: MaterialChave): Buffer {
   if (modo !== material.modo) {
     throw new ErroCofre(
       modo === 1
-        ? "o cofre foi criado com senha; defina SIGILO_SENHA"
-        : "o cofre foi criado com arquivo de chave; remova SIGILO_SENHA ou limpe o cofre",
+        ? "o cofre foi criado com senha; defina PIIVEIL_PASSPHRASE"
+        : "o cofre foi criado com arquivo de chave; remova PIIVEIL_PASSPHRASE ou limpe o cofre",
     );
   }
   const cabecalho = dados.subarray(0, TAM_CABECALHO);
