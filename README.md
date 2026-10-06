@@ -2,6 +2,8 @@
 
 [Português](README.pt-BR.md) · English
 
+[![tests](https://github.com/joaoestella/piiveil/actions/workflows/test.yml/badge.svg)](https://github.com/joaoestella/piiveil/actions/workflows/test.yml)
+
 **Reversible pseudonymization of personal data for [Claude Code](https://code.claude.com).** The model works with
 tokens such as `[PERSON_1]`, `[SSN_1]` and `[COMPANY_1]`, while the files Claude Code writes contain the real
 data.
@@ -274,7 +276,7 @@ legal advice.
 
 ```bash
 npm install
-npm test          # compiles with tsc and runs the tests (node:test)
+npm test          # compiles with tsc and runs the tests (node:test); requires Node.js 22 or newer
 npm run bundle    # builds dist/piiveil.mjs with esbuild
 ```
 
@@ -296,6 +298,9 @@ examples/         example documents and configuration, all fictitious
 
 All test and example documents are synthetic. CPF, CNPJ, PIS, SSN, EIN and card numbers were generated to satisfy
 the validation rules only so the detectors can be exercised; any match with real documents is accidental.
+
+Changes between versions are listed in [CHANGELOG.md](CHANGELOG.md). To report a security problem, see
+[SECURITY.md](SECURITY.md).
 
 ## License
 
