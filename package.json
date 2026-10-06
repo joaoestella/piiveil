@@ -1,6 +1,6 @@
 {
   "name": "piiveil",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Reversible pseudonymization of personal data for Claude Code, built for Brazilian and US documents",
   "private": true,
   "type": "module",

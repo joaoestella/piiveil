@@ -1,7 +1,7 @@
 {
   "name": "piiveil",
   "displayName": "PII Veil",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Reversible pseudonymization of personal data: the model sees tokens like [PERSON_1] and [SSN_1], and the files it writes keep the real data. Built for Brazilian and US documents.",
   "author": {
     "name": "João Vítor Estella",
