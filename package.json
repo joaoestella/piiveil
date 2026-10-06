@@ -1,7 +1,7 @@
 {
   "name": "piiveil",
   "version": "0.1.0",
-  "description": "Pseudonimização reversível de dados pessoais para o Claude Code, com foco em documentos brasileiros e na LGPD",
+  "description": "Reversible pseudonymization of personal data for Claude Code, built for Brazilian and US documents",
   "private": true,
   "type": "module",
   "license": "MIT",

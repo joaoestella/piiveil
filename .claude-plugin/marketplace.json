@@ -1,6 +1,6 @@
 {
   "name": "piiveil",
-  "description": "Marketplace do piiveil: plugin de pseudonimização reversível de dados pessoais para o Claude Code.",
+  "description": "piiveil marketplace: reversible pseudonymization of personal data for Claude Code.",
   "owner": {
     "name": "João Vítor Estella",
     "url": "https://github.com/joaoestella"
@@ -9,7 +9,7 @@
     {
       "name": "piiveil",
       "source": "./",
-      "description": "Pseudonimização reversível de dados pessoais para documentos brasileiros (LGPD)."
+      "description": "Reversible pseudonymization of personal data for Brazilian and US documents."
     }
   ]
 }
