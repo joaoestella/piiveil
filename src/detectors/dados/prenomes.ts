@@ -52,3 +52,38 @@ export const PRENOMES: readonly string[] = [
   "nivaldo", "otavio", "pablo", "raul", "ricardo", "robson", "romulo", "sandro", "saulo", "severino",
   "tarcisio", "teodoro", "tomas", "thomas", "ubirajara", "ulisses", "vanderlei", "wanderley", "zacarias", "zeca",
 ];
+
+/**
+ * Prenomes frequentes nos Estados Unidos. Ficaram de fora os que são também
+ * palavras comuns em inglês (Will, May, June, Hope, Faith, Joy, Art, Bill...),
+ * para reduzir falsos positivos em títulos.
+ */
+export const PRENOMES_EUA: readonly string[] = [
+  // Masculinos
+  "james", "john", "robert", "michael", "william", "david", "richard", "joseph", "thomas", "charles",
+  "christopher", "daniel", "matthew", "anthony", "mark", "donald", "steven", "steve", "paul", "andrew",
+  "joshua", "kenneth", "kevin", "brian", "george", "timothy", "ronald", "edward", "jason", "jeffrey",
+  "ryan", "jacob", "gary", "nicholas", "eric", "jonathan", "stephen", "larry", "justin", "scott",
+  "brandon", "benjamin", "samuel", "gregory", "alexander", "frank", "patrick", "raymond", "jack", "dennis",
+  "jerry", "tyler", "aaron", "adam", "nathan", "henry", "douglas", "zachary", "peter", "kyle",
+  "ethan", "walter", "noah", "jeremy", "christian", "keith", "roger", "terry", "gerald", "harold",
+  "sean", "austin", "carl", "arthur", "lawrence", "dylan", "jesse", "jordan", "bryan", "billy",
+  "joe", "bruce", "gabriel", "logan", "albert", "willie", "alan", "juan", "wayne", "elijah",
+  "randy", "roy", "vincent", "ralph", "eugene", "russell", "bobby", "mason", "philip", "louis",
+  "harry", "howard", "fred", "johnny", "jimmy", "dustin", "travis", "chad", "derek", "shawn",
+  "liam", "oliver", "lucas", "aiden", "jayden", "caleb", "luke", "owen", "wyatt", "hunter",
+  "connor", "isaiah", "carter", "landon", "jaxon", "lincoln", "grayson", "cooper", "colton", "brayden",
+  // Femininos
+  "mary", "patricia", "jennifer", "linda", "elizabeth", "barbara", "susan", "jessica", "sarah", "karen",
+  "lisa", "nancy", "betty", "margaret", "sandra", "ashley", "kimberly", "emily", "donna", "michelle",
+  "carol", "amanda", "dorothy", "melissa", "deborah", "stephanie", "rebecca", "sharon", "laura", "cynthia",
+  "kathleen", "amy", "angela", "shirley", "anna", "brenda", "pamela", "emma", "nicole", "helen",
+  "samantha", "katherine", "christine", "debra", "rachel", "carolyn", "janet", "catherine", "heather", "diane",
+  "ruth", "julie", "olivia", "joyce", "virginia", "victoria", "kelly", "lauren", "christina", "joan",
+  "evelyn", "judith", "megan", "andrea", "cheryl", "hannah", "jacqueline", "martha", "gloria", "teresa",
+  "ann", "sara", "madison", "frances", "kathryn", "janice", "jean", "abigail", "alice", "judy",
+  "sophia", "grace", "denise", "amber", "doris", "marilyn", "danielle", "beverly", "isabella", "theresa",
+  "diana", "natalie", "brittany", "charlotte", "marie", "kayla", "alexis", "lori", "tiffany", "crystal",
+  "ava", "mia", "harper", "abby", "chloe", "ella", "avery", "scarlett", "madeline", "zoey",
+  "penelope", "layla", "riley", "nora", "lily", "eleanor", "hazel", "aubrey", "addison", "brooklyn",
+];

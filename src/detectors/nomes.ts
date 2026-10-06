@@ -1,5 +1,5 @@
 import type { Achado } from "./tipos.js";
-import { PRENOMES } from "./dados/prenomes.js";
+import { PRENOMES, PRENOMES_EUA } from "./dados/prenomes.js";
 import { normalizarPalavra } from "./normalizar.js";
 
 /**
@@ -46,6 +46,18 @@ const CORTE = new Set(
     "clausula", "artigo", "art", "paragrafo", "inciso", "capitulo", "secao", "anexo", "item", "contrato",
     "termo", "laudo", "parecer", "relatorio", "atestado", "procuracao", "declaracao", "certidao", "pessoa",
     "empresa", "termo", "processo", "telefone", "email",
+    // Inglês
+    "ssn", "itin", "ein", "inc", "llc", "corp", "ltd", "llp", "plaintiff", "plaintiffs", "defendant", "defendants",
+    "petitioner", "respondent", "appellant", "appellee", "attorney", "esq", "counsel", "tenant", "landlord",
+    "buyer", "seller", "employer", "employee", "witness", "witnesses", "patient", "doctor", "judge", "mr", "mrs",
+    "ms", "miss", "mx", "sir", "madam", "name", "signature", "signed", "date", "address", "phone", "dear",
+    "january", "february", "march", "april", "june", "july", "august", "september", "october", "november",
+    "december", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", "and", "or",
+    "section", "article", "exhibit", "page", "agreement", "contract", "lease", "report", "the", "of", "to",
+    "about", "as", "in", "on", "at", "for", "with", "from", "by", "into", "over", "after", "before", "is", "are",
+    "was", "be", "new", "how", "what", "why", "when", "where", "your", "our", "my", "this", "that", "these",
+    "those", "all", "more", "read", "view", "edit", "save", "open", "close", "see", "get", "set", "add", "use",
+    "notes", "note", "summary", "overview", "introduction", "chapter", "part", "step", "guide",
   ].map(normalizarPalavra),
 );
 
@@ -61,10 +73,15 @@ const LUGAR = new Set(
     "camara", "senado", "ministerio", "secretaria", "prefeitura", "governo", "delegacia", "aeroporto",
     "estadio", "shopping", "teatro", "museu", "biblioteca", "ginasio", "centro", "nucleo", "unidade",
     "posto", "terminal", "estacao", "rodoviaria",
+    // Inglês
+    "street", "st", "avenue", "ave", "road", "rd", "boulevard", "blvd", "lane", "ln", "drive", "way", "place",
+    "court", "county", "city", "town", "state", "university", "college", "school", "academy", "hospital",
+    "clinic", "bank", "church", "park", "lake", "mount", "mt", "fort", "saint", "san", "los", "las", "port",
+    "center", "centre", "institute", "foundation", "department", "dept", "district", "highway", "hwy", "suite",
   ].map(normalizarPalavra),
 );
 
-const TRATAMENTO = /(?:^|[^\p{L}])(?:Sr|Sra|Srta|Dr|Dra|Dom|Dona|Prof|Profa|Exmo|Exma|Ilmo|Ilma|Sr\(a\))\.?[ \u00A0]$/u;
+const TRATAMENTO = /(?:^|[^\p{L}])(?:Sr|Sra|Srta|Dr|Dra|Dom|Dona|Prof|Profa|Exmo|Exma|Ilmo|Ilma|Sr\(a\)|Mr|Mrs|Ms|Miss|Mx)\.?[ \u00A0]$/u;
 
 interface Palavra {
   texto: string;
@@ -78,7 +95,7 @@ export interface OpcoesNomes {
 }
 
 export function criarDetectorNomes(opcoes: OpcoesNomes = {}) {
-  const prenomes = new Set(PRENOMES);
+  const prenomes = new Set([...PRENOMES, ...PRENOMES_EUA]);
   for (const p of opcoes.prenomesExtras ?? []) prenomes.add(normalizarPalavra(p.trim()));
 
   return function detectarNomes(texto: string): Achado[] {
@@ -134,6 +151,8 @@ function extrairNome(texto: string, trecho: Palavra[], prenomes: Set<string>): A
   let fim = trecho.length - 1;
   while (fim > inicio && trecho[fim]?.particula) fim--;
   const partes = trecho.slice(inicio, fim + 1).filter((p) => !p.particula);
+  // Sequências longas demais costumam ser títulos, não nomes de pessoas.
+  if (partes.length > 6) return null;
   const primeira = trecho[inicio] as Palavra;
   const ultima = trecho[fim] as Palavra;
   if (partes.length < 2) {

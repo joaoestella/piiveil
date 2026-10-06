@@ -11,6 +11,10 @@ export const TIPOS = [
   "OAB",
   "PIS",
   "RG",
+  "SSN",
+  "ITIN",
+  "EIN",
+  "ZIP",
   "TERM",
 ] as const;
 
@@ -35,6 +39,9 @@ export const PRIORIDADE: Record<TipoDado, number> = {
   EMAIL: 95,
   CASE: 90,
   CNPJ: 85,
+  EIN: 83,
+  SSN: 82,
+  ITIN: 82,
   CPF: 80,
   CARD: 75,
   PIS: 70,
@@ -42,6 +49,7 @@ export const PRIORIDADE: Record<TipoDado, number> = {
   RG: 60,
   CEP: 55,
   PHONE: 50,
+  ZIP: 45,
   COMPANY: 40,
   PERSON: 30,
 };

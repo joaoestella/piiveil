@@ -1,0 +1,25 @@
+RESIDENTIAL LEASE AGREEMENT
+
+SYNTHETIC TEST DOCUMENT: ALL NAMES, NUMBERS AND ADDRESSES ARE FICTITIOUS.
+
+LANDLORD: Acme Property Holdings LLC, EIN 45-6789012, represented by its manager, Mr. Robert James Whitaker,
+e-mail robert.whitaker@example.com, phone (415) 555-0132.
+
+TENANT: Jennifer Lynn Alvarez, SSN 412-73-9058, date of birth 04/12/1988, cell 415-555-0187,
+currently residing at 77 Example Avenue, Apt 3, Oakland, CA 94607.
+
+CO-TENANT: Daniel Okafor, ITIN 912-70-1234.
+
+PREMISES: 1200 Fictional Street, Suite 400, San Francisco, CA 94103-1234.
+
+1. RENT. Tenant shall pay $3,400.00 per month by card 4111 1111 1111 1111 or by transfer.
+2. NOTICES. Notices shall be sent to the addresses above or to ZIP code 10001 for the Landlord's agent,
+   Hartwell & Lee Management, Inc.
+3. GOVERNING LAW. This Agreement is governed by the laws of the State of California.
+
+Signed on March 3, 2026.
+
+Robert James Whitaker                      Jennifer Lynn Alvarez
+Landlord                                   Tenant
+
+Witness: Mrs. Patricia Gomez

@@ -12,6 +12,7 @@ import {
   detectarTelefone,
 } from "./documentos.js";
 import { criarDetectorNomes } from "./nomes.js";
+import { detectarEIN, detectarSSN, detectarTelefoneEUA, detectarZIP } from "./eua.js";
 import { detectarEmpresas } from "./empresas.js";
 import { criarDetectorTermos } from "./termos.js";
 import { normalizarPalavra } from "./normalizar.js";
@@ -55,6 +56,10 @@ export function criarDetector(opcoes: OpcoesDeteccao = {}): (texto: string) => A
     ["OAB", detectarOAB],
     ["PIS", detectarPIS],
     ["RG", detectarRG],
+    ["SSN", detectarSSN],
+    ["EIN", detectarEIN],
+    ["PHONE", detectarTelefoneEUA],
+    ["ZIP", detectarZIP],
     ["COMPANY", detectarEmpresas],
     ["PERSON", criarDetectorNomes({ prenomesExtras: opcoes.prenomes })],
   ];
@@ -74,7 +79,7 @@ export function criarDetector(opcoes: OpcoesDeteccao = {}): (texto: string) => A
     const candidatos: Achado[] = [];
     for (const [tipo, detector] of detectores) {
       if (desativados.has(tipo)) continue;
-      candidatos.push(...detector(texto));
+      candidatos.push(...detector(texto).filter((a) => !desativados.has(a.tipo)));
     }
     for (const detector of listas) candidatos.push(...detector(texto));
     for (const c of conhecidos) candidatos.push(...buscarLiteral(texto, c.valor, c.tipo));

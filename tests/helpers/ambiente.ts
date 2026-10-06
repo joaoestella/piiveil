@@ -22,4 +22,4 @@ export function fixture(nome: string): string {
   return readFileSync(new URL(`../../../tests/fixtures/${nome}`, import.meta.url), "utf8");
 }
 
-export const FIXTURES = ["contrato-locacao.txt", "laudo-medico.txt", "reclamacao-trabalhista.txt", "clientes.csv"];
+export const FIXTURES = ["contrato-locacao.txt", "laudo-medico.txt", "reclamacao-trabalhista.txt", "clientes.csv", "us-lease.txt"];

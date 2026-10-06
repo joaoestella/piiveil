@@ -260,6 +260,10 @@ var TIPOS = [
   "OAB",
   "PIS",
   "RG",
+  "SSN",
+  "ITIN",
+  "EIN",
+  "ZIP",
   "TERM"
 ];
 var PRIORIDADE = {
@@ -267,6 +271,9 @@ var PRIORIDADE = {
   EMAIL: 95,
   CASE: 90,
   CNPJ: 85,
+  EIN: 83,
+  SSN: 82,
+  ITIN: 82,
   CPF: 80,
   CARD: 75,
   PIS: 70,
@@ -274,6 +281,7 @@ var PRIORIDADE = {
   RG: 60,
   CEP: 55,
   PHONE: 50,
+  ZIP: 45,
   COMPANY: 40,
   PERSON: 30
 };
@@ -1375,6 +1383,260 @@ var PRENOMES = [
   "zacarias",
   "zeca"
 ];
+var PRENOMES_EUA = [
+  // Masculinos
+  "james",
+  "john",
+  "robert",
+  "michael",
+  "william",
+  "david",
+  "richard",
+  "joseph",
+  "thomas",
+  "charles",
+  "christopher",
+  "daniel",
+  "matthew",
+  "anthony",
+  "mark",
+  "donald",
+  "steven",
+  "steve",
+  "paul",
+  "andrew",
+  "joshua",
+  "kenneth",
+  "kevin",
+  "brian",
+  "george",
+  "timothy",
+  "ronald",
+  "edward",
+  "jason",
+  "jeffrey",
+  "ryan",
+  "jacob",
+  "gary",
+  "nicholas",
+  "eric",
+  "jonathan",
+  "stephen",
+  "larry",
+  "justin",
+  "scott",
+  "brandon",
+  "benjamin",
+  "samuel",
+  "gregory",
+  "alexander",
+  "frank",
+  "patrick",
+  "raymond",
+  "jack",
+  "dennis",
+  "jerry",
+  "tyler",
+  "aaron",
+  "adam",
+  "nathan",
+  "henry",
+  "douglas",
+  "zachary",
+  "peter",
+  "kyle",
+  "ethan",
+  "walter",
+  "noah",
+  "jeremy",
+  "christian",
+  "keith",
+  "roger",
+  "terry",
+  "gerald",
+  "harold",
+  "sean",
+  "austin",
+  "carl",
+  "arthur",
+  "lawrence",
+  "dylan",
+  "jesse",
+  "jordan",
+  "bryan",
+  "billy",
+  "joe",
+  "bruce",
+  "gabriel",
+  "logan",
+  "albert",
+  "willie",
+  "alan",
+  "juan",
+  "wayne",
+  "elijah",
+  "randy",
+  "roy",
+  "vincent",
+  "ralph",
+  "eugene",
+  "russell",
+  "bobby",
+  "mason",
+  "philip",
+  "louis",
+  "harry",
+  "howard",
+  "fred",
+  "johnny",
+  "jimmy",
+  "dustin",
+  "travis",
+  "chad",
+  "derek",
+  "shawn",
+  "liam",
+  "oliver",
+  "lucas",
+  "aiden",
+  "jayden",
+  "caleb",
+  "luke",
+  "owen",
+  "wyatt",
+  "hunter",
+  "connor",
+  "isaiah",
+  "carter",
+  "landon",
+  "jaxon",
+  "lincoln",
+  "grayson",
+  "cooper",
+  "colton",
+  "brayden",
+  // Femininos
+  "mary",
+  "patricia",
+  "jennifer",
+  "linda",
+  "elizabeth",
+  "barbara",
+  "susan",
+  "jessica",
+  "sarah",
+  "karen",
+  "lisa",
+  "nancy",
+  "betty",
+  "margaret",
+  "sandra",
+  "ashley",
+  "kimberly",
+  "emily",
+  "donna",
+  "michelle",
+  "carol",
+  "amanda",
+  "dorothy",
+  "melissa",
+  "deborah",
+  "stephanie",
+  "rebecca",
+  "sharon",
+  "laura",
+  "cynthia",
+  "kathleen",
+  "amy",
+  "angela",
+  "shirley",
+  "anna",
+  "brenda",
+  "pamela",
+  "emma",
+  "nicole",
+  "helen",
+  "samantha",
+  "katherine",
+  "christine",
+  "debra",
+  "rachel",
+  "carolyn",
+  "janet",
+  "catherine",
+  "heather",
+  "diane",
+  "ruth",
+  "julie",
+  "olivia",
+  "joyce",
+  "virginia",
+  "victoria",
+  "kelly",
+  "lauren",
+  "christina",
+  "joan",
+  "evelyn",
+  "judith",
+  "megan",
+  "andrea",
+  "cheryl",
+  "hannah",
+  "jacqueline",
+  "martha",
+  "gloria",
+  "teresa",
+  "ann",
+  "sara",
+  "madison",
+  "frances",
+  "kathryn",
+  "janice",
+  "jean",
+  "abigail",
+  "alice",
+  "judy",
+  "sophia",
+  "grace",
+  "denise",
+  "amber",
+  "doris",
+  "marilyn",
+  "danielle",
+  "beverly",
+  "isabella",
+  "theresa",
+  "diana",
+  "natalie",
+  "brittany",
+  "charlotte",
+  "marie",
+  "kayla",
+  "alexis",
+  "lori",
+  "tiffany",
+  "crystal",
+  "ava",
+  "mia",
+  "harper",
+  "abby",
+  "chloe",
+  "ella",
+  "avery",
+  "scarlett",
+  "madeline",
+  "zoey",
+  "penelope",
+  "layla",
+  "riley",
+  "nora",
+  "lily",
+  "eleanor",
+  "hazel",
+  "aubrey",
+  "addison",
+  "brooklyn"
+];
 
 // src/detectors/normalizar.ts
 function normalizarPalavra(palavra) {
@@ -1574,7 +1836,135 @@ var CORTE = new Set(
     "termo",
     "processo",
     "telefone",
-    "email"
+    "email",
+    // Inglês
+    "ssn",
+    "itin",
+    "ein",
+    "inc",
+    "llc",
+    "corp",
+    "ltd",
+    "llp",
+    "plaintiff",
+    "plaintiffs",
+    "defendant",
+    "defendants",
+    "petitioner",
+    "respondent",
+    "appellant",
+    "appellee",
+    "attorney",
+    "esq",
+    "counsel",
+    "tenant",
+    "landlord",
+    "buyer",
+    "seller",
+    "employer",
+    "employee",
+    "witness",
+    "witnesses",
+    "patient",
+    "doctor",
+    "judge",
+    "mr",
+    "mrs",
+    "ms",
+    "miss",
+    "mx",
+    "sir",
+    "madam",
+    "name",
+    "signature",
+    "signed",
+    "date",
+    "address",
+    "phone",
+    "dear",
+    "january",
+    "february",
+    "march",
+    "april",
+    "june",
+    "july",
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+    "and",
+    "or",
+    "section",
+    "article",
+    "exhibit",
+    "page",
+    "agreement",
+    "contract",
+    "lease",
+    "report",
+    "the",
+    "of",
+    "to",
+    "about",
+    "as",
+    "in",
+    "on",
+    "at",
+    "for",
+    "with",
+    "from",
+    "by",
+    "into",
+    "over",
+    "after",
+    "before",
+    "is",
+    "are",
+    "was",
+    "be",
+    "new",
+    "how",
+    "what",
+    "why",
+    "when",
+    "where",
+    "your",
+    "our",
+    "my",
+    "this",
+    "that",
+    "these",
+    "those",
+    "all",
+    "more",
+    "read",
+    "view",
+    "edit",
+    "save",
+    "open",
+    "close",
+    "see",
+    "get",
+    "set",
+    "add",
+    "use",
+    "notes",
+    "note",
+    "summary",
+    "overview",
+    "introduction",
+    "chapter",
+    "part",
+    "step",
+    "guide"
   ].map(normalizarPalavra)
 );
 var LUGAR = new Set(
@@ -1655,12 +2045,59 @@ var LUGAR = new Set(
     "posto",
     "terminal",
     "estacao",
-    "rodoviaria"
+    "rodoviaria",
+    // Inglês
+    "street",
+    "st",
+    "avenue",
+    "ave",
+    "road",
+    "rd",
+    "boulevard",
+    "blvd",
+    "lane",
+    "ln",
+    "drive",
+    "way",
+    "place",
+    "court",
+    "county",
+    "city",
+    "town",
+    "state",
+    "university",
+    "college",
+    "school",
+    "academy",
+    "hospital",
+    "clinic",
+    "bank",
+    "church",
+    "park",
+    "lake",
+    "mount",
+    "mt",
+    "fort",
+    "saint",
+    "san",
+    "los",
+    "las",
+    "port",
+    "center",
+    "centre",
+    "institute",
+    "foundation",
+    "department",
+    "dept",
+    "district",
+    "highway",
+    "hwy",
+    "suite"
   ].map(normalizarPalavra)
 );
-var TRATAMENTO = /(?:^|[^\p{L}])(?:Sr|Sra|Srta|Dr|Dra|Dom|Dona|Prof|Profa|Exmo|Exma|Ilmo|Ilma|Sr\(a\))\.?[ \u00A0]$/u;
+var TRATAMENTO = /(?:^|[^\p{L}])(?:Sr|Sra|Srta|Dr|Dra|Dom|Dona|Prof|Profa|Exmo|Exma|Ilmo|Ilma|Sr\(a\)|Mr|Mrs|Ms|Miss|Mx)\.?[ \u00A0]$/u;
 function criarDetectorNomes(opcoes = {}) {
-  const prenomes = new Set(PRENOMES);
+  const prenomes = /* @__PURE__ */ new Set([...PRENOMES, ...PRENOMES_EUA]);
   for (const p of opcoes.prenomesExtras ?? []) prenomes.add(normalizarPalavra(p.trim()));
   return function detectarNomes(texto) {
     const achados = [];
@@ -1713,6 +2150,7 @@ function extrairNome(texto, trecho, prenomes) {
   let fim = trecho.length - 1;
   while (fim > inicio && trecho[fim]?.particula) fim--;
   const partes = trecho.slice(inicio, fim + 1).filter((p) => !p.particula);
+  if (partes.length > 6) return null;
   const primeira = trecho[inicio];
   const ultima = trecho[fim];
   if (partes.length < 2) {
@@ -1727,11 +2165,161 @@ function extrairNome(texto, trecho, prenomes) {
   };
 }
 
+// src/detectors/eua.ts
+var ANTES2 = String.raw`(?<![\p{L}\p{N}])(?<![\p{N}][.\/-])`;
+var DEPOIS2 = String.raw`(?![\p{L}\p{N}])(?![.\/-][\p{N}])`;
+function coletar2(texto, rx, tipo, grupo = 0) {
+  const achados = [];
+  const comIndices = new RegExp(rx.source, rx.flags.includes("d") ? rx.flags : rx.flags + "d");
+  for (const m of texto.matchAll(comIndices)) {
+    const t = typeof tipo === "function" ? tipo(m) : tipo;
+    const idx = m.indices?.[grupo];
+    if (!t || !idx) continue;
+    achados.push({ tipo: t, inicio: idx[0], fim: idx[1], valor: texto.slice(idx[0], idx[1]) });
+  }
+  return achados;
+}
+var SSN_PUBLICADOS = /* @__PURE__ */ new Set(["078051120", "219099999"]);
+function classificarSSN(valor) {
+  const d = valor.replace(/\D/g, "");
+  if (d.length !== 9 || SSN_PUBLICADOS.has(d)) return null;
+  const area = Number(d.slice(0, 3));
+  const grupo = Number(d.slice(3, 5));
+  const serie = Number(d.slice(5));
+  if (serie === 0) return null;
+  if (area >= 900) {
+    const itin = grupo >= 50 && grupo <= 65 || grupo >= 70 && grupo <= 88 || grupo >= 90 && grupo <= 92 || grupo >= 94;
+    return itin ? "ITIN" : null;
+  }
+  if (area === 0 || area === 666 || grupo === 0) return null;
+  return "SSN";
+}
+function detectarSSN(texto) {
+  const tipoDe = (m, g = 0) => classificarSSN(m[g] ?? "");
+  const formatado = new RegExp(ANTES2 + String.raw`\d{3}(?<s>[- ])\d{2}\k<s>\d{4}` + DEPOIS2, "gu");
+  const comPalavra = /(?<![\p{L}])(?:SSN|SS#|ITIN|Social Security(?: Number| No\.?)?|TIN)\s*(?:#|No\.?|Number)?\s*[:\-]?\s*(\d{9})(?![\p{N}])/giu;
+  return [...coletar2(texto, formatado, (m) => tipoDe(m)), ...coletar2(texto, comPalavra, (m) => tipoDe(m, 1), 1)];
+}
+var PREFIXOS_EIN = new Set(
+  [
+    ...range(1, 6),
+    ...range(10, 16),
+    ...range(20, 27),
+    ...range(30, 48),
+    ...range(50, 68),
+    ...range(71, 77),
+    ...range(80, 88),
+    ...range(90, 95),
+    98,
+    99
+  ].map((n) => String(n).padStart(2, "0"))
+);
+function range(a, b) {
+  return Array.from({ length: b - a + 1 }, (_, i) => a + i);
+}
+function validarEIN(valor) {
+  const d = valor.replace(/\D/g, "");
+  return d.length === 9 && PREFIXOS_EIN.has(d.slice(0, 2)) && !/^(\d)\1+$/.test(d);
+}
+function detectarEIN(texto) {
+  const formatado = new RegExp(ANTES2 + String.raw`\d{2}-\d{7}` + DEPOIS2, "gu");
+  const comPalavra = /(?<![\p{L}])(?:EIN|FEIN|Employer Identification Number|Federal Tax ID)\s*(?:#|No\.?)?\s*[:\-]?\s*(\d{9})(?![\p{N}])/giu;
+  return [
+    ...coletar2(texto, formatado, (m) => validarEIN(m[0]) ? "EIN" : null),
+    ...coletar2(texto, comPalavra, (m) => validarEIN(m[1] ?? "") ? "EIN" : null, 1)
+  ];
+}
+var PALAVRA_FONE = /(?:phone|tel|cell|mobile|fax|call|contact)\.?\s*(?:#|no\.?|number)?\s*[:\-]?\s*$/iu;
+function detectarTelefoneEUA(texto) {
+  const rx = new RegExp(
+    ANTES2 + String.raw`(?<int>\+?1[\s.-]?)?(?:\((?<area1>[2-9]\d{2})\)|(?<area2>[2-9]\d{2}))(?<s1>[\s.-]?)(?<prefixo>[2-9]\d{2})(?<s2>[\s.-]?)(?<linha>\d{4})` + DEPOIS2,
+    "gu"
+  );
+  return coletar2(texto, rx, (m) => {
+    const g = m.groups ?? {};
+    const area = g.area1 ?? g.area2 ?? "";
+    const prefixo = g.prefixo ?? "";
+    if (/11$/.test(area) || /11$/.test(prefixo)) return null;
+    const formatado = g.area1 !== void 0 || g.s1 !== "" && g.s2 !== "" || g.int !== void 0 && g.int.startsWith("+");
+    if (formatado) return "PHONE";
+    const antes = texto.slice(Math.max(0, m.index - 25), m.index);
+    return PALAVRA_FONE.test(antes) ? "PHONE" : null;
+  });
+}
+var ESTADOS = /* @__PURE__ */ new Set([
+  "AL",
+  "AK",
+  "AZ",
+  "AR",
+  "CA",
+  "CO",
+  "CT",
+  "DE",
+  "FL",
+  "GA",
+  "HI",
+  "ID",
+  "IL",
+  "IN",
+  "IA",
+  "KS",
+  "KY",
+  "LA",
+  "ME",
+  "MD",
+  "MA",
+  "MI",
+  "MN",
+  "MS",
+  "MO",
+  "MT",
+  "NE",
+  "NV",
+  "NH",
+  "NJ",
+  "NM",
+  "NY",
+  "NC",
+  "ND",
+  "OH",
+  "OK",
+  "OR",
+  "PA",
+  "RI",
+  "SC",
+  "SD",
+  "TN",
+  "TX",
+  "UT",
+  "VT",
+  "VA",
+  "WA",
+  "WV",
+  "WI",
+  "WY",
+  "DC",
+  "PR",
+  "GU",
+  "VI",
+  "AS",
+  "MP"
+]);
+function detectarZIP(texto) {
+  const zip4 = new RegExp(ANTES2 + String.raw`\d{5}-\d{4}` + DEPOIS2, "gu");
+  const aposEstado = /(?<![\p{L}])(?<uf>[A-Z]{2}),?[  ](\d{5})(?![\p{N}-])/gu;
+  const comPalavra = /(?<![\p{L}])ZIP(?:[ -]?code)?\s*[:\-]?\s*(\d{5})(?![\p{N}-])/giu;
+  return [
+    ...coletar2(texto, zip4, (m) => /^0{5}/.test(m[0]) ? null : "ZIP"),
+    ...coletar2(texto, aposEstado, (m) => ESTADOS.has(m.groups?.uf ?? "") && m[2] !== "00000" ? "ZIP" : null, 2),
+    ...coletar2(texto, comPalavra, (m) => m[1] !== "00000" ? "ZIP" : null, 1)
+  ];
+}
+
 // src/detectors/empresas.ts
 var PALAVRA2 = String.raw`[\p{Lu}\p{N}][\p{L}\p{N}&'’]*(?:-[\p{L}\p{N}]+)*`;
-var LIGACAO = String.raw`(?:de|da|do|das|dos|e|&|DE|DA|DO|DAS|DOS|E|em|EM)`;
-var SUFIXO_FORTE = String.raw`Ltda\.?|LTDA\.?|S\.\s?A\.?|S\/A|EIRELI|Eireli|SLU|S\.?L\.?U\.?`;
-var SUFIXO_FRACO = String.raw`SA|ME|EPP`;
+var LIGACAO = String.raw`(?:de|da|do|das|dos|e|&|DE|DA|DO|DAS|DOS|E|em|EM|of|and|the|OF|AND|THE)`;
+var SUFIXO_FORTE = String.raw`Ltda\.?|LTDA\.?|S\.\s?A\.?|S\/A|EIRELI|Eireli|SLU|S\.?L\.?U\.?|Inc\.?|INC\.?|LLC|L\.L\.C\.|Corp\.?|CORP\.?|Corporation|CORPORATION|Ltd\.?|LTD\.?|LLP|PLLC|L\.P\.`;
+var SUFIXO_FRACO = String.raw`SA|ME|EPP|LP|Co\.|CO\.`;
 var RAZAO = new RegExp(
   String.raw`(?<![\p{L}\p{N}])(?<nome>${PALAVRA2}(?:[ \u00A0](?:${LIGACAO}[ \u00A0])?${PALAVRA2}){0,8})(?:[ \u00A0]?[-–,][ \u00A0]?|[ \u00A0])(?<sufixo>${SUFIXO_FORTE}|${SUFIXO_FRACO})(?![\p{L}\p{N}])`,
   "gud"
@@ -1791,7 +2379,28 @@ var INICIAIS_IGNORADAS = new Set(
     "razao",
     "social",
     "nome",
-    "empresarial"
+    "empresarial",
+    "the",
+    "by",
+    "between",
+    "and",
+    "with",
+    "for",
+    "plaintiff",
+    "defendant",
+    "company",
+    "client",
+    "contractor",
+    "vendor",
+    "landlord",
+    "tenant",
+    "buyer",
+    "seller",
+    "employer",
+    "employee",
+    "lessor",
+    "lessee",
+    "party"
   ].map(normalizarPalavra)
 );
 function detectarEmpresas(texto) {
@@ -1807,7 +2416,7 @@ function detectarEmpresas(texto) {
     while (pular < palavras.length && INICIAIS_IGNORADAS.has(normalizarPalavra(palavras[pular]?.[0] ?? ""))) pular++;
     const restantes = palavras.slice(pular);
     if (restantes.length === 0) continue;
-    if (/^(SA|ME|EPP)$/.test(sufixo) && restantes.length < 2) continue;
+    if (/^(SA|ME|EPP|LP|Co\.|CO\.)$/.test(sufixo) && restantes.length < 2) continue;
     if (!restantes.some((p) => new RegExp("\\p{L}{2,}", "u").test(p[0]))) continue;
     const inicio = idxNome[0] + (restantes[0]?.index ?? 0);
     const fim = idxSufixo[1];
@@ -1849,6 +2458,10 @@ function criarDetector(opcoes = {}) {
     ["OAB", detectarOAB],
     ["PIS", detectarPIS],
     ["RG", detectarRG],
+    ["SSN", detectarSSN],
+    ["EIN", detectarEIN],
+    ["PHONE", detectarTelefoneEUA],
+    ["ZIP", detectarZIP],
     ["COMPANY", detectarEmpresas],
     ["PERSON", criarDetectorNomes({ prenomesExtras: opcoes.prenomes })]
   ];
@@ -1864,7 +2477,7 @@ function criarDetector(opcoes = {}) {
     const candidatos = [];
     for (const [tipo, detector] of detectores) {
       if (desativados.has(tipo)) continue;
-      candidatos.push(...detector(texto));
+      candidatos.push(...detector(texto).filter((a) => !desativados.has(a.tipo)));
     }
     for (const detector of listas) candidatos.push(...detector(texto));
     for (const c of conhecidos) candidatos.push(...buscarLiteral(texto, c.valor, c.tipo));
@@ -2150,7 +2763,7 @@ async function userPromptSubmit(entrada) {
 // src/hooks/session-start.ts
 var INSTRUCOES_MODELO = [
   "The piiveil plugin is active in this project: personal data in tool outputs has been replaced with tokens",
-  "such as [PERSON_1], [CPF_2], [COMPANY_1], [EMAIL_3] and [CASE_1].",
+  "such as [PERSON_1], [CPF_2], [SSN_1], [COMPANY_1], [EMAIL_3] and [CASE_1].",
   "Treat each token as the data itself. When writing files, editing or running commands, use the tokens exactly",
   "as they appear (brackets, uppercase and number included): they are replaced with the real values before",
   "execution, and the user sees the real values on screen. Do not try to discover, guess or reconstruct the",

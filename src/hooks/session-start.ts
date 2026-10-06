@@ -4,7 +4,7 @@ import { msg } from "../i18n.js";
 /** Instruções para o modelo (em inglês, que o modelo segue bem qualquer que seja o idioma da conversa). */
 export const INSTRUCOES_MODELO = [
   "The piiveil plugin is active in this project: personal data in tool outputs has been replaced with tokens",
-  "such as [PERSON_1], [CPF_2], [COMPANY_1], [EMAIL_3] and [CASE_1].",
+  "such as [PERSON_1], [CPF_2], [SSN_1], [COMPANY_1], [EMAIL_3] and [CASE_1].",
   "Treat each token as the data itself. When writing files, editing or running commands, use the tokens exactly",
   "as they appear (brackets, uppercase and number included): they are replaced with the real values before",
   "execution, and the user sees the real values on screen. Do not try to discover, guess or reconstruct the",
