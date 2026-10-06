@@ -1,12 +1,12 @@
 {
-  "$comentario": "Exemplo de .piiveil/config.json. Copie para a pasta .piiveil/ do seu projeto e ajuste.",
-  "termos": ["Operação Fênix", "Fazenda Boa Esperança"],
-  "nomes": ["Zé do Caminhão"],
-  "empresas": ["Padaria Pão Dourado"],
-  "prenomes": ["Kauê", "Ítalo"],
-  "ignorar": ["Paulo Freire"],
-  "tiposDesativados": [],
-  "prompt": "bloquear",
-  "bloquearArquivosBinarios": true,
-  "desmascararBash": true
+  "$comment": "Exemplo de .piiveil/config.json / Example .piiveil/config.json. Copie para a pasta .piiveil/ do projeto.",
+  "terms": ["Operação Fênix", "Fazenda Boa Esperança"],
+  "names": ["Zé do Caminhão"],
+  "companies": ["Padaria Pão Dourado"],
+  "firstNames": ["Kauê", "Ítalo"],
+  "ignore": ["Paulo Freire"],
+  "disabledTypes": [],
+  "prompt": "block",
+  "blockBinaryFiles": true,
+  "unmaskBash": true
 }

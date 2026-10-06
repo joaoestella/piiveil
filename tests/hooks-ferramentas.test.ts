@@ -112,15 +112,15 @@ describe("PostToolUse", () => {
     assert.ok(!JSON.stringify(saida).includes("111.444.777-35"));
   });
 
-  test("respeita ativo: false", async () => {
+  test("respeita enabled: false", async () => {
     mkdirSync(join(amb.projeto, ".piiveil"));
-    writeFileSync(join(amb.projeto, ".piiveil", "config.json"), JSON.stringify({ ativo: false }));
+    writeFileSync(join(amb.projeto, ".piiveil", "config.json"), JSON.stringify({ enabled: false }));
     assert.equal(await postToolUse(base("PostToolUse", { tool_name: "Bash", tool_output: "CPF 111.444.777-35" })), null);
   });
 
   test("usa termos da configuração do projeto", async () => {
     mkdirSync(join(amb.projeto, ".piiveil"));
-    writeFileSync(join(amb.projeto, ".piiveil", "config.json"), JSON.stringify({ termos: ["Operação Aurora Boreal"] }));
+    writeFileSync(join(amb.projeto, ".piiveil", "config.json"), JSON.stringify({ terms: ["Operação Aurora Boreal"] }));
     const r = (await postToolUse(base("PostToolUse", { tool_name: "Grep", tool_output: "ata.txt: Operação Aurora Boreal" }))) as Qualquer;
     assert.equal(r.hookSpecificOutput.updatedToolOutput, "ata.txt: [TERM_1]");
   });

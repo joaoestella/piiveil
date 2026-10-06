@@ -49,9 +49,9 @@ describe("UserPromptSubmit", () => {
     assert.equal(await userPromptSubmit(base("UserPromptSubmit", { prompt: "quem é [PERSON_1]?" })), null);
     assert.equal(await userPromptSubmit(base("UserPromptSubmit", { prompt: "/piiveil:status" })), null);
   });
-  test("modo avisar não bloqueia", async () => {
+  test("modo warn não bloqueia", async () => {
     mkdirSync(join(amb.projeto, ".piiveil"));
-    writeFileSync(join(amb.projeto, ".piiveil", "config.json"), JSON.stringify({ prompt: "avisar" }));
+    writeFileSync(join(amb.projeto, ".piiveil", "config.json"), JSON.stringify({ prompt: "warn" }));
     const r = (await userPromptSubmit(base("UserPromptSubmit", { prompt: "email ana@exemplo.com" }))) as Qualquer;
     assert.equal(r.decision, undefined);
     assert.match(r.systemMessage, /sem pseudonimização/);

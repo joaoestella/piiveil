@@ -321,7 +321,46 @@ var CONFIG_PADRAO = {
 function arquivosDeConfig(projeto) {
   return [join2(diretorioBase(), "config.json"), join2(resolve2(projeto), ".piiveil", "config.json")];
 }
-var LISTAS = ["termos", "nomes", "empresas", "prenomes", "ignorar"];
+var CHAVES = {
+  enabled: "ativo",
+  ativo: "ativo",
+  terms: "termos",
+  termos: "termos",
+  names: "nomes",
+  nomes: "nomes",
+  companies: "empresas",
+  empresas: "empresas",
+  firstNames: "prenomes",
+  prenomes: "prenomes",
+  ignore: "ignorar",
+  ignorar: "ignorar",
+  disabledTypes: "tiposDesativados",
+  tiposDesativados: "tiposDesativados",
+  prompt: "prompt",
+  blockBinaryFiles: "bloquearArquivosBinarios",
+  bloquearArquivosBinarios: "bloquearArquivosBinarios",
+  unmaskBash: "desmascararBash",
+  desmascararBash: "desmascararBash"
+};
+var LISTAS = /* @__PURE__ */ new Set(["termos", "nomes", "empresas", "prenomes", "ignorar"]);
+var BOOLEANOS = /* @__PURE__ */ new Set(["ativo", "bloquearArquivosBinarios", "desmascararBash"]);
+var COMENTARIOS = /* @__PURE__ */ new Set(["$comment", "$comentario", "$schema"]);
+var MODOS_PROMPT = {
+  block: "bloquear",
+  bloquear: "bloquear",
+  warn: "avisar",
+  avisar: "avisar",
+  off: "desligado",
+  desligado: "desligado"
+};
+var TIPOS_ANTIGOS = {
+  PESSOA: "PERSON",
+  EMPRESA: "COMPANY",
+  TELEFONE: "PHONE",
+  CARTAO: "CARD",
+  PROCESSO: "CASE",
+  TERMO: "TERM"
+};
 function carregarConfig(projeto) {
   const config = structuredClone(CONFIG_PADRAO);
   const avisos = [];
@@ -346,22 +385,26 @@ function carregarConfig(projeto) {
 }
 function aplicar(config, bruto, arquivo, avisos) {
   for (const [chave, valor] of Object.entries(bruto)) {
-    if (LISTAS.includes(chave)) {
-      if (Array.isArray(valor) && valor.every((v) => typeof v === "string")) {
-        config[chave].push(...valor);
-      } else avisos.push(`${arquivo}: "${chave}" deve ser uma lista de textos`);
-    } else if (chave === "tiposDesativados") {
-      if (Array.isArray(valor) && valor.every((v) => TIPOS.includes(v))) {
-        config.tiposDesativados.push(...valor);
-      } else avisos.push(`${arquivo}: "tiposDesativados" aceita apenas ${TIPOS.join(", ")}`);
-    } else if (chave === "prompt") {
-      if (valor === "bloquear" || valor === "avisar" || valor === "desligado") config.prompt = valor;
-      else avisos.push(`${arquivo}: "prompt" deve ser "bloquear", "avisar" ou "desligado"`);
-    } else if (chave === "ativo" || chave === "bloquearArquivosBinarios" || chave === "desmascararBash") {
-      if (typeof valor === "boolean") config[chave] = valor;
-      else avisos.push(`${arquivo}: "${chave}" deve ser true ou false`);
-    } else if (chave !== "$comentario") {
+    if (COMENTARIOS.has(chave)) continue;
+    const campo = CHAVES[chave];
+    if (!campo) {
       avisos.push(`${arquivo}: op\xE7\xE3o desconhecida "${chave}"`);
+    } else if (LISTAS.has(campo)) {
+      if (Array.isArray(valor) && valor.every((v) => typeof v === "string")) {
+        config[campo].push(...valor);
+      } else avisos.push(`${arquivo}: "${chave}" deve ser uma lista de textos`);
+    } else if (campo === "tiposDesativados") {
+      const tipos = Array.isArray(valor) ? valor.map((v) => typeof v === "string" ? TIPOS_ANTIGOS[v] ?? v : v) : null;
+      if (tipos && tipos.every((v) => TIPOS.includes(v))) {
+        config.tiposDesativados.push(...tipos);
+      } else avisos.push(`${arquivo}: "${chave}" aceita apenas ${TIPOS.join(", ")}`);
+    } else if (campo === "prompt") {
+      const modo = typeof valor === "string" ? MODOS_PROMPT[valor] : void 0;
+      if (modo) config.prompt = modo;
+      else avisos.push(`${arquivo}: "prompt" deve ser "block", "warn" ou "off"`);
+    } else if (BOOLEANOS.has(campo)) {
+      if (typeof valor === "boolean") config[campo] = valor;
+      else avisos.push(`${arquivo}: "${chave}" deve ser true ou false`);
     }
   }
 }
@@ -1991,16 +2034,16 @@ Op\xE7\xF5es:
   --projeto <pasta>      pasta do projeto (padr\xE3o: CLAUDE_PROJECT_DIR ou a pasta atual)
 `;
 var CONFIG_EXEMPLO = {
-  $comentario: "Configura\xE7\xE3o do piiveil para este projeto. Esta pasta n\xE3o deve ser versionada.",
-  termos: [],
-  nomes: [],
-  empresas: [],
-  prenomes: [],
-  ignorar: [],
-  tiposDesativados: [],
-  prompt: "bloquear",
-  bloquearArquivosBinarios: true,
-  desmascararBash: true
+  $comment: "piiveil settings for this project. Do not commit this folder.",
+  terms: [],
+  names: [],
+  companies: [],
+  firstNames: [],
+  ignore: [],
+  disabledTypes: [],
+  prompt: "block",
+  blockBinaryFiles: true,
+  unmaskBash: true
 };
 async function main(args) {
   const [comando, ...resto] = args;

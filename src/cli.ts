@@ -76,16 +76,16 @@ Opções:
 `;
 
 const CONFIG_EXEMPLO = {
-  $comentario: "Configuração do piiveil para este projeto. Esta pasta não deve ser versionada.",
-  termos: [],
-  nomes: [],
-  empresas: [],
-  prenomes: [],
-  ignorar: [],
-  tiposDesativados: [],
-  prompt: "bloquear",
-  bloquearArquivosBinarios: true,
-  desmascararBash: true,
+  $comment: "piiveil settings for this project. Do not commit this folder.",
+  terms: [],
+  names: [],
+  companies: [],
+  firstNames: [],
+  ignore: [],
+  disabledTypes: [],
+  prompt: "block",
+  blockBinaryFiles: true,
+  unmaskBash: true,
 };
 
 export async function main(args: string[]): Promise<number> {

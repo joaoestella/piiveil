@@ -47,7 +47,54 @@ export function arquivosDeConfig(projeto: string): string[] {
   return [join(diretorioBase(), "config.json"), join(resolve(projeto), ".piiveil", "config.json")];
 }
 
-const LISTAS = ["termos", "nomes", "empresas", "prenomes", "ignorar"] as const;
+/**
+ * Nome de cada opção no arquivo de configuração. As chaves em inglês são as
+ * principais; as em português são aceitas como alternativa.
+ */
+const CHAVES: Record<string, keyof Config> = {
+  enabled: "ativo",
+  ativo: "ativo",
+  terms: "termos",
+  termos: "termos",
+  names: "nomes",
+  nomes: "nomes",
+  companies: "empresas",
+  empresas: "empresas",
+  firstNames: "prenomes",
+  prenomes: "prenomes",
+  ignore: "ignorar",
+  ignorar: "ignorar",
+  disabledTypes: "tiposDesativados",
+  tiposDesativados: "tiposDesativados",
+  prompt: "prompt",
+  blockBinaryFiles: "bloquearArquivosBinarios",
+  bloquearArquivosBinarios: "bloquearArquivosBinarios",
+  unmaskBash: "desmascararBash",
+  desmascararBash: "desmascararBash",
+};
+
+const LISTAS = new Set<keyof Config>(["termos", "nomes", "empresas", "prenomes", "ignorar"]);
+const BOOLEANOS = new Set<keyof Config>(["ativo", "bloquearArquivosBinarios", "desmascararBash"]);
+const COMENTARIOS = new Set(["$comment", "$comentario", "$schema"]);
+
+const MODOS_PROMPT: Record<string, ModoPrompt> = {
+  block: "bloquear",
+  bloquear: "bloquear",
+  warn: "avisar",
+  avisar: "avisar",
+  off: "desligado",
+  desligado: "desligado",
+};
+
+/** Nomes de tipo das versões anteriores, aceitos em disabledTypes. */
+const TIPOS_ANTIGOS: Record<string, TipoDado> = {
+  PESSOA: "PERSON",
+  EMPRESA: "COMPANY",
+  TELEFONE: "PHONE",
+  CARTAO: "CARD",
+  PROCESSO: "CASE",
+  TERMO: "TERM",
+};
 
 /**
  * Junta a configuração global (~/.piiveil/config.json) com a do projeto
@@ -79,22 +126,26 @@ export function carregarConfig(projeto: string): ConfigCarregada {
 
 function aplicar(config: Config, bruto: Record<string, unknown>, arquivo: string, avisos: string[]): void {
   for (const [chave, valor] of Object.entries(bruto)) {
-    if ((LISTAS as readonly string[]).includes(chave)) {
-      if (Array.isArray(valor) && valor.every((v) => typeof v === "string")) {
-        config[chave as (typeof LISTAS)[number]].push(...(valor as string[]));
-      } else avisos.push(`${arquivo}: "${chave}" deve ser uma lista de textos`);
-    } else if (chave === "tiposDesativados") {
-      if (Array.isArray(valor) && valor.every((v) => (TIPOS as readonly unknown[]).includes(v))) {
-        config.tiposDesativados.push(...(valor as TipoDado[]));
-      } else avisos.push(`${arquivo}: "tiposDesativados" aceita apenas ${TIPOS.join(", ")}`);
-    } else if (chave === "prompt") {
-      if (valor === "bloquear" || valor === "avisar" || valor === "desligado") config.prompt = valor;
-      else avisos.push(`${arquivo}: "prompt" deve ser "bloquear", "avisar" ou "desligado"`);
-    } else if (chave === "ativo" || chave === "bloquearArquivosBinarios" || chave === "desmascararBash") {
-      if (typeof valor === "boolean") config[chave] = valor;
-      else avisos.push(`${arquivo}: "${chave}" deve ser true ou false`);
-    } else if (chave !== "$comentario") {
+    if (COMENTARIOS.has(chave)) continue;
+    const campo = CHAVES[chave];
+    if (!campo) {
       avisos.push(`${arquivo}: opção desconhecida "${chave}"`);
+    } else if (LISTAS.has(campo)) {
+      if (Array.isArray(valor) && valor.every((v) => typeof v === "string")) {
+        (config[campo] as string[]).push(...(valor as string[]));
+      } else avisos.push(`${arquivo}: "${chave}" deve ser uma lista de textos`);
+    } else if (campo === "tiposDesativados") {
+      const tipos = Array.isArray(valor) ? valor.map((v) => (typeof v === "string" ? (TIPOS_ANTIGOS[v] ?? v) : v)) : null;
+      if (tipos && tipos.every((v) => (TIPOS as readonly unknown[]).includes(v))) {
+        config.tiposDesativados.push(...(tipos as TipoDado[]));
+      } else avisos.push(`${arquivo}: "${chave}" aceita apenas ${TIPOS.join(", ")}`);
+    } else if (campo === "prompt") {
+      const modo = typeof valor === "string" ? MODOS_PROMPT[valor] : undefined;
+      if (modo) config.prompt = modo;
+      else avisos.push(`${arquivo}: "prompt" deve ser "block", "warn" ou "off"`);
+    } else if (BOOLEANOS.has(campo)) {
+      if (typeof valor === "boolean") (config[campo] as boolean) = valor;
+      else avisos.push(`${arquivo}: "${chave}" deve ser true ou false`);
     }
   }
 }

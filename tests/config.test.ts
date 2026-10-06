@@ -28,6 +28,37 @@ describe("configuração", () => {
     assert.equal(config.prompt, "desligado");
   });
 
+  test("chaves em inglês e em português são equivalentes", () => {
+    writeFileSync(
+      join(amb.projeto, ".piiveil", "config.json"),
+      JSON.stringify({
+        terms: ["A"],
+        termos: ["B"],
+        names: ["Fulano de Tal"],
+        companies: ["Acme"],
+        firstNames: ["Kauê"],
+        ignore: ["Paulo Freire"],
+        disabledTypes: ["PHONE", "PESSOA"],
+        prompt: "warn",
+        blockBinaryFiles: false,
+        unmaskBash: false,
+        enabled: true,
+        $comment: "ignorado",
+      }),
+    );
+    const { config, avisos } = carregarConfig(amb.projeto);
+    assert.deepEqual(avisos, []);
+    assert.deepEqual(config.termos, ["A", "B"]);
+    assert.deepEqual(config.nomes, ["Fulano de Tal"]);
+    assert.deepEqual(config.empresas, ["Acme"]);
+    assert.deepEqual(config.prenomes, ["Kauê"]);
+    assert.deepEqual(config.ignorar, ["Paulo Freire"]);
+    assert.deepEqual(config.tiposDesativados, ["PHONE", "PERSON"], "nomes antigos de tipo são convertidos");
+    assert.equal(config.prompt, "avisar");
+    assert.equal(config.bloquearArquivosBinarios, false);
+    assert.equal(config.desmascararBash, false);
+  });
+
   test("valores inválidos geram aviso e são ignorados", () => {
     writeFileSync(
       join(amb.projeto, ".piiveil", "config.json"),
