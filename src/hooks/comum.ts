@@ -1,5 +1,6 @@
 import { carregarConfig, pastaDoProjeto, type ConfigCarregada } from "../config.js";
 import { ErroCofre } from "../vault/cofre.js";
+import { msg } from "../i18n.js";
 
 /** Campos comuns da entrada dos hooks (os demais variam por evento). */
 export interface EntradaHook {
@@ -29,6 +30,6 @@ export function contexto(entrada: EntradaHook): Contexto {
  */
 export function descreverErro(e: unknown): string {
   if (e instanceof ErroCofre) return e.message;
-  if (e instanceof Error) return `erro interno (${e.name})`;
-  return "erro interno";
+  if (e instanceof Error) return msg().erroInterno(e.name);
+  return msg().erroInterno();
 }

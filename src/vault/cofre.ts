@@ -14,6 +14,7 @@ import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { cifrar, decifrar, ErroCofre, type MaterialChave } from "./cripto.js";
 import { TIPOS, type TipoDado } from "../detectors/tipos.js";
+import { msg } from "../i18n.js";
 
 export { ErroCofre } from "./cripto.js";
 
@@ -54,7 +55,7 @@ export function obterMaterialChave(): MaterialChave {
   const arquivo = join(base, "chave");
   if (existsSync(arquivo)) {
     const chave = Buffer.from(readFileSync(arquivo, "utf8").trim(), "base64");
-    if (chave.length !== 32) throw new ErroCofre(`arquivo de chave inválido: ${arquivo}`);
+    if (chave.length !== 32) throw new ErroCofre(msg().chaveInvalida(arquivo));
     return { modo: 0, segredo: chave };
   }
   garantirDiretorio(base);
@@ -146,7 +147,7 @@ export class Cofre {
   }
 
   private carregar(c: Conteudo): void {
-    if (c.versao !== 1) throw new ErroCofre(`versão de cofre não suportada: ${String(c.versao)}`);
+    if (c.versao !== 1) throw new ErroCofre(msg().versaoCofre(String(c.versao)));
     this.criadoEm = c.criadoEm;
     this.contadores = { ...c.contadores };
     for (const [token, entrada] of Object.entries(c.entradas)) {
@@ -255,7 +256,7 @@ async function travar(arquivo: string): Promise<() => void> {
       } catch {
         continue;
       }
-      if (Date.now() - inicio > ESPERA_MAXIMA_MS) throw new ErroCofre("tempo esgotado esperando a trava do cofre");
+      if (Date.now() - inicio > ESPERA_MAXIMA_MS) throw new ErroCofre(msg().travaEsgotada());
       await new Promise((r) => setTimeout(r, 15 + Math.random() * 35));
     }
   }

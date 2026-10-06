@@ -20,6 +20,180 @@ import { dirname, join, resolve } from "node:path";
 
 // src/vault/cripto.ts
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:crypto";
+
+// src/i18n.ts
+var pt = {
+  // Cofre
+  chaveTamanho: () => "a chave do cofre deve ter 32 bytes",
+  cofreCorrompido: () => "arquivo do cofre inv\xE1lido ou corrompido",
+  modoDesconhecido: () => "modo de chave desconhecido no cofre",
+  cofreComSenha: () => "o cofre foi criado com senha; defina PIIVEIL_PASSPHRASE",
+  cofreComArquivo: () => "o cofre foi criado com arquivo de chave; remova PIIVEIL_PASSPHRASE ou limpe o cofre",
+  cofreIlegivel: () => "n\xE3o foi poss\xEDvel decifrar o cofre: chave ou senha incorreta, ou arquivo adulterado",
+  chaveInvalida: (arquivo) => `arquivo de chave inv\xE1lido: ${arquivo}`,
+  versaoCofre: (v) => `vers\xE3o de cofre n\xE3o suportada: ${v}`,
+  travaEsgotada: () => "tempo esgotado esperando a trava do cofre",
+  erroInterno: (nome) => nome ? `erro interno (${nome})` : "erro interno",
+  // Configuração
+  jsonInvalido: (arquivo) => `${arquivo}: JSON inv\xE1lido, arquivo ignorado`,
+  esperadoObjeto: (arquivo) => `${arquivo}: esperado um objeto JSON, arquivo ignorado`,
+  opcaoDesconhecida: (arquivo, chave) => `${arquivo}: op\xE7\xE3o desconhecida "${chave}"`,
+  esperadaLista: (arquivo, chave) => `${arquivo}: "${chave}" deve ser uma lista de textos`,
+  tiposValidos: (arquivo, chave, tipos) => `${arquivo}: "${chave}" aceita apenas ${tipos}`,
+  promptValido: (arquivo) => `${arquivo}: "prompt" deve ser "block", "warn" ou "off"`,
+  booleanoValido: (arquivo, chave) => `${arquivo}: "${chave}" deve ser true ou false`,
+  idiomaValido: (arquivo) => `${arquivo}: "language" deve ser "auto", "en" ou "pt-BR"`,
+  // Hooks
+  saidaOcultadaModelo: (erro) => `[piiveil] Conte\xFAdo ocultado: n\xE3o foi poss\xEDvel pseudonimiz\xE1-lo com seguran\xE7a (${erro}). Avise o usu\xE1rio; n\xE3o tente obter o conte\xFAdo por outro caminho.`,
+  saidaOcultadaUsuario: (erro) => `piiveil: sa\xEDda da ferramenta ocultada por seguran\xE7a (${erro})`,
+  falhaProcessar: (erro) => `piiveil: falha ao processar (${erro})`,
+  sessaoInterrompida: (motivo) => `${motivo}. A sess\xE3o foi interrompida para proteger os dados.`,
+  binarioBloqueado: () => 'piiveil: PDFs e imagens lidos pelo Read chegam ao modelo sem pseudonimiza\xE7\xE3o. Extraia o texto pelo Bash (por exemplo, `pdftotext arquivo.pdf -`), cuja sa\xEDda \xE9 mascarada, ou pe\xE7a ao usu\xE1rio para desativar a op\xE7\xE3o "blockBinaryFiles".',
+  cofreNaoAbriu: (erro) => `piiveil: n\xE3o foi poss\xEDvel abrir o cofre para restaurar os dados reais (${erro}).`,
+  valorPerigosoShell: (token) => `piiveil: o valor de ${token} cont\xE9m aspas ou caracteres especiais do shell e n\xE3o pode ser inserido com seguran\xE7a no comando. Grave o conte\xFAdo com Write ou Edit em vez de pass\xE1-lo pela linha de comando.`,
+  tokensDesconhecidos: (tokens) => `piiveil: os tokens ${tokens} n\xE3o existem no cofre e foram mantidos como texto literal.`,
+  promptNaoVerificadoAviso: (erro) => `piiveil: n\xE3o foi poss\xEDvel verificar o prompt (${erro})`,
+  promptNaoVerificadoBloqueio: (erro) => `piiveil: n\xE3o foi poss\xEDvel verificar o prompt (${erro}). Ele n\xE3o foi enviado.`,
+  promptComDados: (n) => `piiveil: o prompt cont\xE9m ${n} dado(s) pessoal(is) e n\xE3o foi enviado ao modelo.`,
+  promptReescreva: () => "Reescreva usando os tokens abaixo (a resposta mostrar\xE1 os valores reais na tela):",
+  promptUseToken: (valor, token) => `  \u2022 "${valor}" \u2192 use ${token}`,
+  promptMais: (n) => `  \u2022 \u2026 e mais ${n}`,
+  promptArquivo: () => "Para textos longos, salve o conte\xFAdo num arquivo e pe\xE7a para l\xEA-lo: a leitura passa pelo mascaramento.",
+  promptAvisado: (n) => `piiveil: aten\xE7\xE3o, o prompt cont\xE9m ${n} dado(s) pessoal(is) e foi enviado ao modelo sem pseudonimiza\xE7\xE3o.`,
+  problemasConfig: (avisos) => `piiveil: problemas na configura\xE7\xE3o:
+${avisos}`,
+  // Linha de comando
+  ajuda: (versao) => `piiveil ${versao}: pseudonimiza\xE7\xE3o revers\xEDvel de dados pessoais para o Claude Code
+
+Uso: node dist/piiveil.mjs <comando> [op\xE7\xF5es]
+
+Comandos:
+  status               mostra onde fica o cofre do projeto e quantos dados ele guarda
+  clear                apaga os valores do cofre do projeto (os tokens antigos deixam de ter valor)
+  init                 cria .piiveil/config.json no projeto, j\xE1 protegido do git
+  mask <arquivo>       imprime o arquivo com os dados pessoais trocados por tokens
+  unmask <arquivo>     imprime o arquivo com os tokens trocados pelos valores reais
+  hook <evento>        uso interno pelos hooks do Claude Code
+
+Op\xE7\xF5es:
+  --project <pasta>    pasta do projeto (padr\xE3o: CLAUDE_PROJECT_DIR ou a pasta atual)
+
+Os comandos tamb\xE9m aceitam os nomes em portugu\xEAs: limpar, mascarar, desmascarar, --projeto.
+`,
+  hookDesconhecido: (evento) => `piiveil: hook desconhecido "${evento}"`,
+  comandoDesconhecido: (comando) => `piiveil: comando desconhecido "${comando}"`,
+  uso: (comando) => `uso: ${comando} <arquivo>`,
+  statusProjeto: (p) => `projeto: ${p}`,
+  statusCofre: (arquivo, existe) => `cofre: ${arquivo}${existe ? "" : " (ainda n\xE3o criado)"}`,
+  statusChave: (senha, arquivo) => `chave: ${senha ? "derivada de PIIVEIL_PASSPHRASE" : arquivo}`,
+  statusAtivo: (ativo) => `ativo: ${ativo ? "sim" : "n\xE3o"}`,
+  statusIdioma: (idioma2) => `idioma: ${idioma2}`,
+  statusConfig: (arquivos) => `configura\xE7\xE3o: ${arquivos.length ? arquivos.join(", ") : "padr\xE3o"}`,
+  statusAviso: (a) => `aviso: ${a}`,
+  statusDados: (total, resumo) => `dados no cofre: ${total}${resumo ? ` (${resumo})` : ""}`,
+  limpo: () => "piiveil: valores do cofre apagados. Tokens usados at\xE9 aqui n\xE3o ser\xE3o mais traduzidos e seus n\xFAmeros n\xE3o ser\xE3o reutilizados.",
+  semCofre: () => "piiveil: este projeto n\xE3o tinha cofre.",
+  configExiste: (arquivo) => `piiveil: ${arquivo} j\xE1 existe.`,
+  configCriada: (arquivo) => `piiveil: criado ${arquivo}`
+};
+var en = {
+  chaveTamanho: () => "the vault key must be 32 bytes long",
+  cofreCorrompido: () => "invalid or corrupted vault file",
+  modoDesconhecido: () => "unknown key mode in vault",
+  cofreComSenha: () => "the vault was created with a passphrase; set PIIVEIL_PASSPHRASE",
+  cofreComArquivo: () => "the vault was created with a key file; unset PIIVEIL_PASSPHRASE or clear the vault",
+  cofreIlegivel: () => "could not decrypt the vault: wrong key or passphrase, or the file was tampered with",
+  chaveInvalida: (arquivo) => `invalid key file: ${arquivo}`,
+  versaoCofre: (v) => `unsupported vault version: ${v}`,
+  travaEsgotada: () => "timed out waiting for the vault lock",
+  erroInterno: (nome) => nome ? `internal error (${nome})` : "internal error",
+  jsonInvalido: (arquivo) => `${arquivo}: invalid JSON, file ignored`,
+  esperadoObjeto: (arquivo) => `${arquivo}: expected a JSON object, file ignored`,
+  opcaoDesconhecida: (arquivo, chave) => `${arquivo}: unknown option "${chave}"`,
+  esperadaLista: (arquivo, chave) => `${arquivo}: "${chave}" must be a list of strings`,
+  tiposValidos: (arquivo, chave, tipos) => `${arquivo}: "${chave}" only accepts ${tipos}`,
+  promptValido: (arquivo) => `${arquivo}: "prompt" must be "block", "warn" or "off"`,
+  booleanoValido: (arquivo, chave) => `${arquivo}: "${chave}" must be true or false`,
+  idiomaValido: (arquivo) => `${arquivo}: "language" must be "auto", "en" or "pt-BR"`,
+  saidaOcultadaModelo: (erro) => `[piiveil] Content hidden: it could not be pseudonymized safely (${erro}). Tell the user; do not try to obtain the content another way.`,
+  saidaOcultadaUsuario: (erro) => `piiveil: tool output hidden for safety (${erro})`,
+  falhaProcessar: (erro) => `piiveil: processing failed (${erro})`,
+  sessaoInterrompida: (motivo) => `${motivo}. The session was stopped to protect the data.`,
+  binarioBloqueado: () => 'piiveil: PDFs and images read with Read reach the model without pseudonymization. Extract the text with Bash (for example, `pdftotext file.pdf -`), whose output is masked, or ask the user to turn off the "blockBinaryFiles" option.',
+  cofreNaoAbriu: (erro) => `piiveil: could not open the vault to restore the real values (${erro}).`,
+  valorPerigosoShell: (token) => `piiveil: the value of ${token} contains quotes or shell special characters and cannot be inserted safely into the command. Write the content with Write or Edit instead of passing it on the command line.`,
+  tokensDesconhecidos: (tokens) => `piiveil: the tokens ${tokens} do not exist in the vault and were kept as literal text.`,
+  promptNaoVerificadoAviso: (erro) => `piiveil: could not check the prompt (${erro})`,
+  promptNaoVerificadoBloqueio: (erro) => `piiveil: could not check the prompt (${erro}). It was not sent.`,
+  promptComDados: (n) => `piiveil: the prompt contains ${n} piece(s) of personal data and was not sent to the model.`,
+  promptReescreva: () => "Rewrite it using the tokens below (the reply will show the real values on screen):",
+  promptUseToken: (valor, token) => `  \u2022 "${valor}" \u2192 use ${token}`,
+  promptMais: (n) => `  \u2022 \u2026 and ${n} more`,
+  promptArquivo: () => "For long texts, save the content to a file and ask for it to be read: reads go through masking.",
+  promptAvisado: (n) => `piiveil: warning, the prompt contains ${n} piece(s) of personal data and was sent to the model unmasked.`,
+  problemasConfig: (avisos) => `piiveil: configuration problems:
+${avisos}`,
+  ajuda: (versao) => `piiveil ${versao}: reversible pseudonymization of personal data for Claude Code
+
+Usage: node dist/piiveil.mjs <command> [options]
+
+Commands:
+  status               show where the project vault is and how much data it holds
+  clear                erase the values in the project vault (old tokens stop resolving)
+  init                 create .piiveil/config.json in the project, already ignored by git
+  mask <file>          print the file with personal data replaced by tokens
+  unmask <file>        print the file with tokens replaced by the real values
+  hook <event>         internal use by the Claude Code hooks
+
+Options:
+  --project <folder>   project folder (default: CLAUDE_PROJECT_DIR or the current folder)
+`,
+  hookDesconhecido: (evento) => `piiveil: unknown hook "${evento}"`,
+  comandoDesconhecido: (comando) => `piiveil: unknown command "${comando}"`,
+  uso: (comando) => `usage: ${comando} <file>`,
+  statusProjeto: (p) => `project: ${p}`,
+  statusCofre: (arquivo, existe) => `vault: ${arquivo}${existe ? "" : " (not created yet)"}`,
+  statusChave: (senha, arquivo) => `key: ${senha ? "derived from PIIVEIL_PASSPHRASE" : arquivo}`,
+  statusAtivo: (ativo) => `enabled: ${ativo ? "yes" : "no"}`,
+  statusIdioma: (idioma2) => `language: ${idioma2}`,
+  statusConfig: (arquivos) => `configuration: ${arquivos.length ? arquivos.join(", ") : "default"}`,
+  statusAviso: (a) => `warning: ${a}`,
+  statusDados: (total, resumo) => `items in vault: ${total}${resumo ? ` (${resumo})` : ""}`,
+  limpo: () => "piiveil: vault values erased. Tokens used so far will no longer resolve, and their numbers will not be reused.",
+  semCofre: () => "piiveil: this project had no vault.",
+  configExiste: (arquivo) => `piiveil: ${arquivo} already exists.`,
+  configCriada: (arquivo) => `piiveil: created ${arquivo}`
+};
+var CATALOGO = { en, "pt-BR": pt };
+var atual;
+function normalizarIdioma(valor) {
+  if (!valor) return void 0;
+  const v = valor.trim().toLowerCase().split(/[.@]/)[0] ?? "";
+  if (v === "" || v === "auto" || v === "c" || v === "posix") return void 0;
+  return v.startsWith("pt") ? "pt-BR" : "en";
+}
+function detectarIdioma(env = process.env) {
+  for (const variavel of ["PIIVEIL_LANG", "LC_ALL", "LC_MESSAGES", "LANG"]) {
+    const idioma2 = normalizarIdioma(env[variavel]);
+    if (idioma2) return idioma2;
+  }
+  try {
+    return normalizarIdioma(Intl.DateTimeFormat().resolvedOptions().locale) ?? "en";
+  } catch {
+    return "en";
+  }
+}
+function definirIdioma(idioma2) {
+  atual = idioma2 === "auto" ? void 0 : idioma2;
+}
+function idioma() {
+  return atual ?? detectarIdioma();
+}
+function msg() {
+  return CATALOGO[idioma()];
+}
+
+// src/vault/cripto.ts
 var MAGICO = Buffer.from("PIV1", "ascii");
 var TAM_CABECALHO = 4 + 1 + 16 + 12;
 var TAM_TAG = 16;
@@ -28,7 +202,7 @@ var ErroCofre = class extends Error {
 };
 function derivar(material, sal) {
   if (material.modo === 0) {
-    if (material.segredo.length !== 32) throw new ErroCofre("chave do cofre deve ter 32 bytes");
+    if (material.segredo.length !== 32) throw new ErroCofre(msg().chaveTamanho());
     return material.segredo;
   }
   return scryptSync(material.segredo, sal, 32, { N: 2 ** 15, r: 8, p: 1, maxmem: 64 * 1024 * 1024 });
@@ -44,17 +218,17 @@ function cifrar(claro, material) {
 }
 function lerModo(dados) {
   if (dados.length < TAM_CABECALHO + TAM_TAG || !dados.subarray(0, 4).equals(MAGICO)) {
-    throw new ErroCofre("arquivo do cofre inv\xE1lido ou corrompido");
+    throw new ErroCofre(msg().cofreCorrompido());
   }
   const modo = dados[4];
-  if (modo !== 0 && modo !== 1) throw new ErroCofre("modo de chave desconhecido no cofre");
+  if (modo !== 0 && modo !== 1) throw new ErroCofre(msg().modoDesconhecido());
   return modo;
 }
 function decifrar(dados, material) {
   const modo = lerModo(dados);
   if (modo !== material.modo) {
     throw new ErroCofre(
-      modo === 1 ? "o cofre foi criado com senha; defina PIIVEIL_PASSPHRASE" : "o cofre foi criado com arquivo de chave; remova PIIVEIL_PASSPHRASE ou limpe o cofre"
+      modo === 1 ? msg().cofreComSenha() : msg().cofreComArquivo()
     );
   }
   const cabecalho = dados.subarray(0, TAM_CABECALHO);
@@ -68,7 +242,7 @@ function decifrar(dados, material) {
   try {
     return Buffer.concat([decifra.update(corpo), decifra.final()]);
   } catch {
-    throw new ErroCofre("n\xE3o foi poss\xEDvel decifrar o cofre: chave ou senha incorreta, ou arquivo adulterado");
+    throw new ErroCofre(msg().cofreIlegivel());
   }
 }
 
@@ -118,7 +292,7 @@ function obterMaterialChave() {
   const arquivo = join(base, "chave");
   if (existsSync(arquivo)) {
     const chave2 = Buffer.from(readFileSync(arquivo, "utf8").trim(), "base64");
-    if (chave2.length !== 32) throw new ErroCofre(`arquivo de chave inv\xE1lido: ${arquivo}`);
+    if (chave2.length !== 32) throw new ErroCofre(msg().chaveInvalida(arquivo));
     return { modo: 0, segredo: chave2 };
   }
   garantirDiretorio(base);
@@ -203,7 +377,7 @@ var Cofre = class _Cofre {
     }
   }
   carregar(c) {
-    if (c.versao !== 1) throw new ErroCofre(`vers\xE3o de cofre n\xE3o suportada: ${String(c.versao)}`);
+    if (c.versao !== 1) throw new ErroCofre(msg().versaoCofre(String(c.versao)));
     this.criadoEm = c.criadoEm;
     this.contadores = { ...c.contadores };
     for (const [token, entrada] of Object.entries(c.entradas)) {
@@ -297,7 +471,7 @@ async function travar(arquivo) {
       } catch {
         continue;
       }
-      if (Date.now() - inicio > ESPERA_MAXIMA_MS) throw new ErroCofre("tempo esgotado esperando a trava do cofre");
+      if (Date.now() - inicio > ESPERA_MAXIMA_MS) throw new ErroCofre(msg().travaEsgotada());
       await new Promise((r) => setTimeout(r, 15 + Math.random() * 35));
     }
   }
@@ -316,7 +490,8 @@ var CONFIG_PADRAO = {
   tiposDesativados: [],
   prompt: "bloquear",
   bloquearArquivosBinarios: true,
-  desmascararBash: true
+  desmascararBash: true,
+  idioma: "auto"
 };
 function arquivosDeConfig(projeto) {
   return [join2(diretorioBase(), "config.json"), join2(resolve2(projeto), ".piiveil", "config.json")];
@@ -340,7 +515,9 @@ var CHAVES = {
   blockBinaryFiles: "bloquearArquivosBinarios",
   bloquearArquivosBinarios: "bloquearArquivosBinarios",
   unmaskBash: "desmascararBash",
-  desmascararBash: "desmascararBash"
+  desmascararBash: "desmascararBash",
+  language: "idioma",
+  idioma: "idioma"
 };
 var LISTAS = /* @__PURE__ */ new Set(["termos", "nomes", "empresas", "prenomes", "ignorar"]);
 var BOOLEANOS = /* @__PURE__ */ new Set(["ativo", "bloquearArquivosBinarios", "desmascararBash"]);
@@ -365,22 +542,35 @@ function carregarConfig(projeto) {
   const config = structuredClone(CONFIG_PADRAO);
   const avisos = [];
   const lidos = [];
+  const objetos = [];
+  const problemas = [];
   for (const arquivo of arquivosDeConfig(projeto)) {
     if (!existsSync2(arquivo)) continue;
     let bruto;
     try {
       bruto = JSON.parse(readFileSync2(arquivo, "utf8"));
     } catch {
-      avisos.push(`${arquivo}: JSON inv\xE1lido, arquivo ignorado`);
+      problemas.push([arquivo, "json"]);
       continue;
     }
     if (!bruto || typeof bruto !== "object" || Array.isArray(bruto)) {
-      avisos.push(`${arquivo}: esperado um objeto JSON, arquivo ignorado`);
+      problemas.push([arquivo, "objeto"]);
       continue;
     }
-    lidos.push(arquivo);
-    aplicar(config, bruto, arquivo, avisos);
+    objetos.push([arquivo, bruto]);
   }
+  let idiomaEscolhido = "auto";
+  for (const [, o] of objetos) {
+    const v = idiomaDaConfig(o.language ?? o.idioma);
+    if (v) idiomaEscolhido = v;
+  }
+  definirIdioma(idiomaEscolhido);
+  for (const [arquivo, tipo] of problemas) avisos.push(tipo === "json" ? msg().jsonInvalido(arquivo) : msg().esperadoObjeto(arquivo));
+  for (const [arquivo, o] of objetos) {
+    lidos.push(arquivo);
+    aplicar(config, o, arquivo, avisos);
+  }
+  config.idioma = idiomaEscolhido;
   return { config, avisos, arquivos: lidos };
 }
 function aplicar(config, bruto, arquivo, avisos) {
@@ -388,25 +578,32 @@ function aplicar(config, bruto, arquivo, avisos) {
     if (COMENTARIOS.has(chave)) continue;
     const campo = CHAVES[chave];
     if (!campo) {
-      avisos.push(`${arquivo}: op\xE7\xE3o desconhecida "${chave}"`);
+      avisos.push(msg().opcaoDesconhecida(arquivo, chave));
     } else if (LISTAS.has(campo)) {
       if (Array.isArray(valor) && valor.every((v) => typeof v === "string")) {
         config[campo].push(...valor);
-      } else avisos.push(`${arquivo}: "${chave}" deve ser uma lista de textos`);
+      } else avisos.push(msg().esperadaLista(arquivo, chave));
     } else if (campo === "tiposDesativados") {
       const tipos = Array.isArray(valor) ? valor.map((v) => typeof v === "string" ? TIPOS_ANTIGOS[v] ?? v : v) : null;
       if (tipos && tipos.every((v) => TIPOS.includes(v))) {
         config.tiposDesativados.push(...tipos);
-      } else avisos.push(`${arquivo}: "${chave}" aceita apenas ${TIPOS.join(", ")}`);
+      } else avisos.push(msg().tiposValidos(arquivo, chave, TIPOS.join(", ")));
     } else if (campo === "prompt") {
       const modo = typeof valor === "string" ? MODOS_PROMPT[valor] : void 0;
       if (modo) config.prompt = modo;
-      else avisos.push(`${arquivo}: "prompt" deve ser "block", "warn" ou "off"`);
+      else avisos.push(msg().promptValido(arquivo));
     } else if (BOOLEANOS.has(campo)) {
       if (typeof valor === "boolean") config[campo] = valor;
-      else avisos.push(`${arquivo}: "${chave}" deve ser true ou false`);
+      else avisos.push(msg().booleanoValido(arquivo, chave));
+    } else if (campo === "idioma") {
+      if (!idiomaDaConfig(valor)) avisos.push(msg().idiomaValido(arquivo));
     }
   }
+}
+function idiomaDaConfig(v) {
+  if (typeof v !== "string") return void 0;
+  if (v.trim().toLowerCase() === "auto") return "auto";
+  return /^(en|pt)([-_].*)?$/i.test(v.trim()) ? normalizarIdioma(v) : void 0;
 }
 function opcoesDeteccao(config) {
   return {
@@ -1488,26 +1685,26 @@ function criarDetectorNomes(opcoes = {}) {
 }
 function dividirEmTrechos(palavras) {
   const trechos = [];
-  let atual = [];
+  let atual2 = [];
   let ignorandoLugar = false;
   for (const p of palavras) {
     const n = normalizarPalavra(p.texto);
     if (!p.particula && LUGAR.has(n)) {
-      if (atual.length) trechos.push(atual);
-      atual = [];
+      if (atual2.length) trechos.push(atual2);
+      atual2 = [];
       ignorandoLugar = true;
       continue;
     }
     if (!p.particula && CORTE.has(n)) {
-      if (atual.length) trechos.push(atual);
-      atual = [];
+      if (atual2.length) trechos.push(atual2);
+      atual2 = [];
       ignorandoLugar = false;
       continue;
     }
     if (ignorandoLugar) continue;
-    atual.push(p);
+    atual2.push(p);
   }
-  if (atual.length) trechos.push(atual);
+  if (atual2.length) trechos.push(atual2);
   return trechos;
 }
 function extrairNome(texto, trecho, prenomes) {
@@ -1759,8 +1956,8 @@ function contexto(entrada) {
 }
 function descreverErro(e) {
   if (e instanceof ErroCofre) return e.message;
-  if (e instanceof Error) return `erro interno (${e.name})`;
-  return "erro interno";
+  if (e instanceof Error) return msg().erroInterno(e.name);
+  return msg().erroInterno();
 }
 
 // src/hooks/post-tool-use.ts
@@ -1778,9 +1975,9 @@ async function postToolUse(entrada) {
     if (!alterado) return null;
     return { hookSpecificOutput: { hookEventName: "PostToolUse", updatedToolOutput: valor } };
   } catch (e) {
-    const aviso = `[piiveil] Conte\xFAdo ocultado: n\xE3o foi poss\xEDvel pseudonimiz\xE1-lo com seguran\xE7a (${descreverErro(e)}). Avise o usu\xE1rio; n\xE3o tente obter o conte\xFAdo por outro caminho.`;
+    const aviso = msg().saidaOcultadaModelo(descreverErro(e));
     return {
-      systemMessage: `piiveil: sa\xEDda da ferramenta ocultada por seguran\xE7a (${descreverErro(e)})`,
+      systemMessage: msg().saidaOcultadaUsuario(descreverErro(e)),
       hookSpecificOutput: { hookEventName: "PostToolUse", updatedToolOutput: ocultarTextos(bruto, aviso) }
     };
   }
@@ -1842,9 +2039,7 @@ async function preToolUse(entrada) {
   if (!ctx.config.ativo) return null;
   const ferramenta = String(entrada.tool_name ?? "");
   const input = entrada.tool_input ?? {};
-  const bloquearRead = (caminho) => ferramenta === "Read" && ctx.config.bloquearArquivosBinarios && EXTENSOES_BINARIAS.has(extname(caminho).toLowerCase()) ? negar(
-    "piiveil: PDFs e imagens lidos pelo Read chegam ao modelo sem pseudonimiza\xE7\xE3o. Extraia o texto pelo Bash (por exemplo, `pdftotext arquivo.pdf -`), cuja sa\xEDda \xE9 mascarada, ou pe\xE7a ao usu\xE1rio para desativar a op\xE7\xE3o bloquearArquivosBinarios."
-  ) : null;
+  const bloquearRead = (caminho) => ferramenta === "Read" && ctx.config.bloquearArquivosBinarios && EXTENSOES_BINARIAS.has(extname(caminho).toLowerCase()) ? negar(msg().binarioBloqueado()) : null;
   if (ferramenta === "Bash" && !ctx.config.desmascararBash) return null;
   const serializado = JSON.stringify(input);
   PADRAO_TOKEN.lastIndex = 0;
@@ -1855,7 +2050,7 @@ async function preToolUse(entrada) {
   try {
     cofre = Cofre.abrir(ctx.projeto);
   } catch (e) {
-    return negar(`piiveil: n\xE3o foi poss\xEDvel abrir o cofre para restaurar os dados reais (${descreverErro(e)}).`);
+    return negar(msg().cofreNaoAbriu(descreverErro(e)));
   }
   let novo;
   if (ferramenta === "Grep") {
@@ -1872,9 +2067,7 @@ async function preToolUse(entrada) {
     for (const m of comando.matchAll(PADRAO_TOKEN)) {
       const real = cofre.valorDe(m[0]);
       if (real !== void 0 && PERIGOSOS_NO_SHELL.test(real)) {
-        return negar(
-          `piiveil: o valor de ${m[0]} cont\xE9m aspas ou caracteres especiais do shell e n\xE3o pode ser inserido com seguran\xE7a no comando. Grave o conte\xFAdo com Write ou Edit em vez de pass\xE1-lo pela linha de comando.`
-        );
+        return negar(msg().valorPerigosoShell(m[0]));
       }
     }
     novo = desmascararProfundo(input, cofre);
@@ -1890,7 +2083,7 @@ async function preToolUse(entrada) {
       hookEventName: "PreToolUse",
       updatedInput: novo,
       ...desconhecidos.length ? {
-        additionalContext: `piiveil: os tokens ${desconhecidos.join(", ")} n\xE3o existem no cofre e foram mantidos como texto literal.`
+        additionalContext: msg().tokensDesconhecidos(desconhecidos.join(", "))
       } : {}
     }
   };
@@ -1935,39 +2128,37 @@ async function userPromptSubmit(entrada) {
       }))
     );
   } catch (e) {
-    if (ctx.config.prompt === "avisar") return { systemMessage: `piiveil: n\xE3o foi poss\xEDvel verificar o prompt (${descreverErro(e)})` };
-    return { decision: "block", reason: `piiveil: n\xE3o foi poss\xEDvel verificar o prompt (${descreverErro(e)}). Ele n\xE3o foi enviado.` };
+    if (ctx.config.prompt === "avisar") return { systemMessage: msg().promptNaoVerificadoAviso(descreverErro(e)) };
+    return { decision: "block", reason: msg().promptNaoVerificadoBloqueio(descreverErro(e)) };
   }
   if (substituicoes.length === 0) return null;
   const unicos = [...new Map(substituicoes.map((s) => [s.token, s])).values()];
-  const linhas = unicos.slice(0, MAX_EXEMPLOS).map((s) => `  \u2022 "${s.valor}" \u2192 use ${s.token}`);
-  if (unicos.length > MAX_EXEMPLOS) linhas.push(`  \u2022 \u2026 e mais ${unicos.length - MAX_EXEMPLOS}`);
+  const linhas = unicos.slice(0, MAX_EXEMPLOS).map((s) => msg().promptUseToken(s.valor, s.token));
+  if (unicos.length > MAX_EXEMPLOS) linhas.push(msg().promptMais(unicos.length - MAX_EXEMPLOS));
   if (ctx.config.prompt === "avisar") {
-    return {
-      systemMessage: `piiveil: aten\xE7\xE3o, o prompt cont\xE9m ${unicos.length} dado(s) pessoal(is) e foi enviado ao modelo sem pseudonimiza\xE7\xE3o.`
-    };
+    return { systemMessage: msg().promptAvisado(unicos.length) };
   }
   const motivo = [
-    `piiveil: o prompt cont\xE9m ${unicos.length} dado(s) pessoal(is) e n\xE3o foi enviado ao modelo.`,
-    "Reescreva usando os tokens abaixo (a resposta mostrar\xE1 os valores reais na tela):",
+    msg().promptComDados(unicos.length),
+    msg().promptReescreva(),
     ...linhas,
-    "Para textos longos, salve o conte\xFAdo num arquivo e pe\xE7a para l\xEA-lo: a leitura passa pelo mascaramento."
+    msg().promptArquivo()
   ].join("\n");
   return { decision: "block", reason: motivo };
 }
 
 // src/hooks/session-start.ts
 var INSTRUCOES_MODELO = [
-  "O plugin piiveil est\xE1 ativo neste projeto: dados pessoais nas sa\xEDdas das ferramentas foram trocados por tokens",
-  "como [PERSON_1], [CPF_2], [COMPANY_1], [EMAIL_3] e [CASE_1].",
-  "Trate cada token como o pr\xF3prio dado. Ao escrever arquivos, editar ou rodar comandos, use os tokens exatamente",
-  "como aparecem (com colchetes, mai\xFAsculas e n\xFAmero): eles s\xE3o trocados pelos valores reais antes da execu\xE7\xE3o,",
-  "e o usu\xE1rio v\xEA os valores reais na tela. N\xE3o tente descobrir, adivinhar ou reconstruir os valores originais,",
-  "n\xE3o invente tokens novos e n\xE3o altere o n\xFAmero de um token.",
-  "Aten\xE7\xE3o com a ferramenta Edit: ela confere se o old_string existe no arquivo antes de os tokens serem trocados,",
-  "ent\xE3o um old_string com tokens nunca \xE9 encontrado. Escolha um old_string sem tokens (um trecho vizinho que",
-  "identifique o local sem ambiguidade); o new_string pode conter tokens normalmente. Se n\xE3o houver trecho assim,",
-  "reescreva o arquivo inteiro com Write, usando os tokens."
+  "The piiveil plugin is active in this project: personal data in tool outputs has been replaced with tokens",
+  "such as [PERSON_1], [CPF_2], [COMPANY_1], [EMAIL_3] and [CASE_1].",
+  "Treat each token as the data itself. When writing files, editing or running commands, use the tokens exactly",
+  "as they appear (brackets, uppercase and number included): they are replaced with the real values before",
+  "execution, and the user sees the real values on screen. Do not try to discover, guess or reconstruct the",
+  "original values, do not invent new tokens and do not change a token's number.",
+  "Careful with the Edit tool: it checks that old_string exists in the file before tokens are replaced, so an",
+  "old_string containing tokens is never found. Pick an old_string without tokens (nearby text that identifies",
+  "the location unambiguously); new_string may contain tokens as usual. If no such text exists, rewrite the",
+  "whole file with Write, using the tokens. Keep replying in the user's language."
 ].join(" ");
 async function sessionStart(entrada) {
   const ctx = contexto(entrada);
@@ -1975,8 +2166,7 @@ async function sessionStart(entrada) {
   const saida = {
     hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: INSTRUCOES_MODELO }
   };
-  if (ctx.avisos.length) saida.systemMessage = `piiveil: problemas na configura\xE7\xE3o:
-${ctx.avisos.join("\n")}`;
+  if (ctx.avisos.length) saida.systemMessage = msg().problemasConfig(ctx.avisos.join("\n"));
   return saida;
 }
 
@@ -1989,9 +2179,9 @@ var HOOKS = {
   "session-start": sessionStart
 };
 function saidaDeFalha(evento, e) {
-  const motivo = `piiveil: falha ao processar (${descreverErro(e)})`;
+  const motivo = msg().falhaProcessar(descreverErro(e));
   if (evento === "post-tool-use") {
-    return { continue: false, stopReason: `${motivo}. A sess\xE3o foi interrompida para proteger os dados.`, systemMessage: motivo };
+    return { continue: false, stopReason: msg().sessaoInterrompida(motivo), systemMessage: motivo };
   }
   if (evento === "pre-tool-use") {
     return { hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: motivo } };
@@ -2018,21 +2208,6 @@ function argumento(args, nome) {
   const i = args.indexOf(nome);
   return i >= 0 ? args[i + 1] : void 0;
 }
-var AJUDA = `piiveil ${VERSAO}: pseudonimiza\xE7\xE3o revers\xEDvel de dados pessoais para o Claude Code
-
-Uso: node dist/piiveil.mjs <comando> [op\xE7\xF5es]
-
-Comandos:
-  status                 mostra onde fica o cofre do projeto e quantos dados ele guarda
-  limpar                 apaga o cofre do projeto (os tokens antigos deixam de ter valor)
-  init                   cria .piiveil/config.json no projeto, j\xE1 protegido do git
-  mascarar <arquivo>     imprime o arquivo com os dados pessoais trocados por tokens
-  desmascarar <arquivo>  imprime o arquivo com os tokens trocados pelos valores reais
-  hook <evento>          uso interno pelos hooks do Claude Code
-
-Op\xE7\xF5es:
-  --projeto <pasta>      pasta do projeto (padr\xE3o: CLAUDE_PROJECT_DIR ou a pasta atual)
-`;
 var CONFIG_EXEMPLO = {
   $comment: "piiveil settings for this project. Do not commit this folder.",
   terms: [],
@@ -2045,15 +2220,27 @@ var CONFIG_EXEMPLO = {
   blockBinaryFiles: true,
   unmaskBash: true
 };
+var ALIASES = {
+  limpar: "clear",
+  mascarar: "mask",
+  desmascarar: "unmask",
+  ajuda: "help",
+  "--help": "help",
+  "-h": "help",
+  versao: "version",
+  "--version": "version"
+};
 async function main(args) {
-  const [comando, ...resto] = args;
-  const projeto = pastaDoProjeto(argumento(resto, "--projeto"));
+  const [bruto, ...resto] = args;
+  const comando = bruto === void 0 ? "help" : ALIASES[bruto] ?? bruto;
+  const pasta = argumento(resto, "--project") ?? argumento(resto, "--projeto");
+  const projeto = pastaDoProjeto(pasta);
+  const carregada = comando === "hook" ? void 0 : carregarConfig(projeto);
   switch (comando) {
     case "hook": {
       const evento = resto[0] ?? "";
       if (!HOOKS[evento]) {
-        process.stderr.write(`piiveil: hook desconhecido "${evento}"
-`);
+        process.stderr.write(msg().hookDesconhecido(evento) + "\n");
         return 1;
       }
       const saida = await executarHook(evento, await lerEntrada());
@@ -2062,25 +2249,25 @@ async function main(args) {
     }
     case "status": {
       const arquivo = caminhoDoCofre(projeto);
-      const { arquivos, avisos, config } = carregarConfig(projeto);
-      const linhas = [`projeto: ${projeto}`, `cofre: ${arquivo}${existsSync4(arquivo) ? "" : " (ainda n\xE3o criado)"}`];
-      linhas.push(`chave: ${process.env.PIIVEIL_PASSPHRASE ? "derivada de PIIVEIL_PASSPHRASE" : join3(diretorioBase(), "chave")}`);
-      linhas.push(`ativo: ${config.ativo ? "sim" : "n\xE3o"}`);
-      linhas.push(`configura\xE7\xE3o: ${arquivos.length ? arquivos.join(", ") : "padr\xE3o"}`);
-      for (const a of avisos) linhas.push(`aviso: ${a}`);
+      const { arquivos, avisos, config } = carregada;
+      const m = msg();
+      const linhas = [m.statusProjeto(projeto), m.statusCofre(arquivo, existsSync4(arquivo))];
+      linhas.push(m.statusChave(Boolean(process.env.PIIVEIL_PASSPHRASE), join3(diretorioBase(), "chave")));
+      linhas.push(m.statusAtivo(config.ativo));
+      linhas.push(m.statusIdioma(idioma()));
+      linhas.push(m.statusConfig(arquivos));
+      for (const a of avisos) linhas.push(m.statusAviso(a));
       if (existsSync4(arquivo)) {
         const cofre = Cofre.abrir(projeto);
         const resumo = Object.entries(cofre.resumo()).map(([t, n]) => `${t}: ${n}`);
-        linhas.push(`dados no cofre: ${cofre.tamanho}${resumo.length ? ` (${resumo.join(", ")})` : ""}`);
+        linhas.push(m.statusDados(cofre.tamanho, resumo.join(", ")));
       }
       process.stdout.write(linhas.join("\n") + "\n");
       return 0;
     }
-    case "limpar": {
+    case "clear": {
       const havia = await Cofre.limpar(projeto);
-      process.stdout.write(
-        havia ? "piiveil: valores do cofre apagados. Tokens usados at\xE9 aqui n\xE3o ser\xE3o mais traduzidos e seus n\xFAmeros n\xE3o ser\xE3o reutilizados.\n" : "piiveil: este projeto n\xE3o tinha cofre.\n"
-      );
+      process.stdout.write((havia ? msg().limpo() : msg().semCofre()) + "\n");
       return 0;
     }
     case "init": {
@@ -2090,26 +2277,23 @@ async function main(args) {
       if (!existsSync4(gitignore)) writeFileSync2(gitignore, "*\n");
       const arquivo = join3(dir, "config.json");
       if (existsSync4(arquivo)) {
-        process.stdout.write(`piiveil: ${arquivo} j\xE1 existe.
-`);
+        process.stdout.write(msg().configExiste(arquivo) + "\n");
       } else {
         writeFileSync2(arquivo, JSON.stringify(CONFIG_EXEMPLO, null, 2) + "\n");
-        process.stdout.write(`piiveil: criado ${arquivo}
-`);
+        process.stdout.write(msg().configCriada(arquivo) + "\n");
       }
       return 0;
     }
-    case "mascarar":
-    case "desmascarar": {
-      const caminho = resto.find((a, i) => !a.startsWith("--") && resto[i - 1] !== "--projeto");
+    case "mask":
+    case "unmask": {
+      const caminho = resto.find((a, i) => !a.startsWith("--") && resto[i - 1] !== "--project" && resto[i - 1] !== "--projeto");
       if (!caminho) {
-        process.stderr.write(`uso: ${comando} <arquivo>
-`);
+        process.stderr.write(msg().uso(comando) + "\n");
         return 1;
       }
       const texto = readFileSync3(caminho, "utf8");
-      if (comando === "mascarar") {
-        const { config } = carregarConfig(projeto);
+      if (comando === "mask") {
+        const { config } = carregada;
         const r = await Cofre.comTrava(projeto, (c) => mascarar(texto, c, opcoesDeteccao(config)));
         process.stdout.write(r.texto);
       } else {
@@ -2117,20 +2301,16 @@ async function main(args) {
       }
       return 0;
     }
-    case void 0:
-    case "ajuda":
-    case "--help":
-    case "-h":
-      process.stdout.write(AJUDA);
+    case "help":
+      process.stdout.write(msg().ajuda(VERSAO));
       return 0;
-    case "--version":
-    case "versao":
+    case "version":
       process.stdout.write(VERSAO + "\n");
       return 0;
     default:
-      process.stderr.write(`piiveil: comando desconhecido "${comando}"
+      process.stderr.write(`${msg().comandoDesconhecido(String(bruto))}
 
-${AJUDA}`);
+${msg().ajuda(VERSAO)}`);
       return 1;
   }
 }

@@ -4,6 +4,7 @@ import { PADRAO_TOKEN } from "../detectors/index.js";
 import { escaparRegex } from "../detectors/normalizar.js";
 import { desmascarar, desmascararProfundo, tokensDesconhecidos } from "../pseudonimizar.js";
 import { contexto, descreverErro, type EntradaHook, type SaidaHook } from "./comum.js";
+import { msg } from "../i18n.js";
 
 /** Extensões que o Read entrega ao modelo como documento ou imagem, sem texto para os hooks mascararem. */
 export const EXTENSOES_BINARIAS = new Set([".pdf", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".tif", ".tiff", ".heic"]);
@@ -38,11 +39,7 @@ export async function preToolUse(entrada: EntradaHook): Promise<SaidaHook | null
 
   const bloquearRead = (caminho: string): SaidaHook | null =>
     ferramenta === "Read" && ctx.config.bloquearArquivosBinarios && EXTENSOES_BINARIAS.has(extname(caminho).toLowerCase())
-      ? negar(
-          "piiveil: PDFs e imagens lidos pelo Read chegam ao modelo sem pseudonimização. " +
-            "Extraia o texto pelo Bash (por exemplo, `pdftotext arquivo.pdf -`), cuja saída é mascarada, " +
-            "ou peça ao usuário para desativar a opção bloquearArquivosBinarios.",
-        )
+      ? negar(msg().binarioBloqueado())
       : null;
 
   if (ferramenta === "Bash" && !ctx.config.desmascararBash) return null;
@@ -57,7 +54,7 @@ export async function preToolUse(entrada: EntradaHook): Promise<SaidaHook | null
   try {
     cofre = Cofre.abrir(ctx.projeto);
   } catch (e) {
-    return negar(`piiveil: não foi possível abrir o cofre para restaurar os dados reais (${descreverErro(e)}).`);
+    return negar(msg().cofreNaoAbriu(descreverErro(e)));
   }
 
   let novo: Record<string, unknown>;
@@ -78,10 +75,7 @@ export async function preToolUse(entrada: EntradaHook): Promise<SaidaHook | null
     for (const m of comando.matchAll(PADRAO_TOKEN)) {
       const real = cofre.valorDe(m[0]);
       if (real !== undefined && PERIGOSOS_NO_SHELL.test(real)) {
-        return negar(
-          `piiveil: o valor de ${m[0]} contém aspas ou caracteres especiais do shell e não pode ser inserido ` +
-            "com segurança no comando. Grave o conteúdo com Write ou Edit em vez de passá-lo pela linha de comando.",
-        );
+        return negar(msg().valorPerigosoShell(m[0]));
       }
     }
     novo = desmascararProfundo(input, cofre);
@@ -100,7 +94,7 @@ export async function preToolUse(entrada: EntradaHook): Promise<SaidaHook | null
       updatedInput: novo,
       ...(desconhecidos.length
         ? {
-            additionalContext: `piiveil: os tokens ${desconhecidos.join(", ")} não existem no cofre e foram mantidos como texto literal.`,
+            additionalContext: msg().tokensDesconhecidos(desconhecidos.join(", ")),
           }
         : {}),
     },

@@ -1,16 +1,18 @@
 import { contexto, type EntradaHook, type SaidaHook } from "./comum.js";
+import { msg } from "../i18n.js";
 
+/** Instruções para o modelo (em inglês, que o modelo segue bem qualquer que seja o idioma da conversa). */
 export const INSTRUCOES_MODELO = [
-  "O plugin piiveil está ativo neste projeto: dados pessoais nas saídas das ferramentas foram trocados por tokens",
-  "como [PERSON_1], [CPF_2], [COMPANY_1], [EMAIL_3] e [CASE_1].",
-  "Trate cada token como o próprio dado. Ao escrever arquivos, editar ou rodar comandos, use os tokens exatamente",
-  "como aparecem (com colchetes, maiúsculas e número): eles são trocados pelos valores reais antes da execução,",
-  "e o usuário vê os valores reais na tela. Não tente descobrir, adivinhar ou reconstruir os valores originais,",
-  "não invente tokens novos e não altere o número de um token.",
-  "Atenção com a ferramenta Edit: ela confere se o old_string existe no arquivo antes de os tokens serem trocados,",
-  "então um old_string com tokens nunca é encontrado. Escolha um old_string sem tokens (um trecho vizinho que",
-  "identifique o local sem ambiguidade); o new_string pode conter tokens normalmente. Se não houver trecho assim,",
-  "reescreva o arquivo inteiro com Write, usando os tokens.",
+  "The piiveil plugin is active in this project: personal data in tool outputs has been replaced with tokens",
+  "such as [PERSON_1], [CPF_2], [COMPANY_1], [EMAIL_3] and [CASE_1].",
+  "Treat each token as the data itself. When writing files, editing or running commands, use the tokens exactly",
+  "as they appear (brackets, uppercase and number included): they are replaced with the real values before",
+  "execution, and the user sees the real values on screen. Do not try to discover, guess or reconstruct the",
+  "original values, do not invent new tokens and do not change a token's number.",
+  "Careful with the Edit tool: it checks that old_string exists in the file before tokens are replaced, so an",
+  "old_string containing tokens is never found. Pick an old_string without tokens (nearby text that identifies",
+  "the location unambiguously); new_string may contain tokens as usual. If no such text exists, rewrite the",
+  "whole file with Write, using the tokens. Keep replying in the user's language.",
 ].join(" ");
 
 /** SessionStart: explica ao modelo como lidar com os tokens e avisa sobre problemas de configuração. */
@@ -20,6 +22,6 @@ export async function sessionStart(entrada: EntradaHook): Promise<SaidaHook | nu
   const saida: SaidaHook = {
     hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: INSTRUCOES_MODELO },
   };
-  if (ctx.avisos.length) saida.systemMessage = `piiveil: problemas na configuração:\n${ctx.avisos.join("\n")}`;
+  if (ctx.avisos.length) saida.systemMessage = msg().problemasConfig(ctx.avisos.join("\n"));
   return saida;
 }

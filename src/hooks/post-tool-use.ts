@@ -2,6 +2,7 @@ import { Cofre } from "../vault/cofre.js";
 import { opcoesDeteccao } from "../config.js";
 import { mascarar } from "../pseudonimizar.js";
 import { contexto, descreverErro, type EntradaHook, type SaidaHook } from "./comum.js";
+import { msg } from "../i18n.js";
 
 /**
  * PostToolUse: mascara dados pessoais na saída das ferramentas antes que o
@@ -30,11 +31,9 @@ export async function postToolUse(entrada: EntradaHook): Promise<SaidaHook | nul
     if (!alterado) return null;
     return { hookSpecificOutput: { hookEventName: "PostToolUse", updatedToolOutput: valor } };
   } catch (e) {
-    const aviso =
-      `[piiveil] Conteúdo ocultado: não foi possível pseudonimizá-lo com segurança (${descreverErro(e)}). ` +
-      "Avise o usuário; não tente obter o conteúdo por outro caminho.";
+    const aviso = msg().saidaOcultadaModelo(descreverErro(e));
     return {
-      systemMessage: `piiveil: saída da ferramenta ocultada por segurança (${descreverErro(e)})`,
+      systemMessage: msg().saidaOcultadaUsuario(descreverErro(e)),
       hookSpecificOutput: { hookEventName: "PostToolUse", updatedToolOutput: ocultarTextos(bruto, aviso) },
     };
   }

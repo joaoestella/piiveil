@@ -8,6 +8,8 @@ export function ambienteTemporario(): { home: string; projeto: string; limpar: (
   const home = join(raiz, "home");
   const projeto = join(raiz, "projeto");
   process.env.PIIVEIL_HOME = home;
+  // Os testes conferem as mensagens em português; os de idioma mudam isso explicitamente.
+  process.env.PIIVEIL_LANG = "pt-BR";
   delete process.env.PIIVEIL_PASSPHRASE;
   return {
     home,

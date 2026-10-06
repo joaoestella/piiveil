@@ -2,6 +2,7 @@ import { Cofre } from "../vault/cofre.js";
 import { opcoesDeteccao } from "../config.js";
 import { mascarar } from "../pseudonimizar.js";
 import { contexto, descreverErro, type EntradaHook, type SaidaHook } from "./comum.js";
+import { msg } from "../i18n.js";
 
 const MAX_EXEMPLOS = 8;
 
@@ -27,26 +28,24 @@ export async function userPromptSubmit(entrada: EntradaHook): Promise<SaidaHook 
       })),
     );
   } catch (e) {
-    if (ctx.config.prompt === "avisar") return { systemMessage: `piiveil: não foi possível verificar o prompt (${descreverErro(e)})` };
-    return { decision: "block", reason: `piiveil: não foi possível verificar o prompt (${descreverErro(e)}). Ele não foi enviado.` };
+    if (ctx.config.prompt === "avisar") return { systemMessage: msg().promptNaoVerificadoAviso(descreverErro(e)) };
+    return { decision: "block", reason: msg().promptNaoVerificadoBloqueio(descreverErro(e)) };
   }
   if (substituicoes.length === 0) return null;
 
   const unicos = [...new Map(substituicoes.map((s) => [s.token, s])).values()];
-  const linhas = unicos.slice(0, MAX_EXEMPLOS).map((s) => `  • "${s.valor}" → use ${s.token}`);
-  if (unicos.length > MAX_EXEMPLOS) linhas.push(`  • … e mais ${unicos.length - MAX_EXEMPLOS}`);
+  const linhas = unicos.slice(0, MAX_EXEMPLOS).map((s) => msg().promptUseToken(s.valor, s.token));
+  if (unicos.length > MAX_EXEMPLOS) linhas.push(msg().promptMais(unicos.length - MAX_EXEMPLOS));
 
   if (ctx.config.prompt === "avisar") {
-    return {
-      systemMessage: `piiveil: atenção, o prompt contém ${unicos.length} dado(s) pessoal(is) e foi enviado ao modelo sem pseudonimização.`,
-    };
+    return { systemMessage: msg().promptAvisado(unicos.length) };
   }
 
   const motivo = [
-    `piiveil: o prompt contém ${unicos.length} dado(s) pessoal(is) e não foi enviado ao modelo.`,
-    "Reescreva usando os tokens abaixo (a resposta mostrará os valores reais na tela):",
+    msg().promptComDados(unicos.length),
+    msg().promptReescreva(),
     ...linhas,
-    "Para textos longos, salve o conteúdo num arquivo e peça para lê-lo: a leitura passa pelo mascaramento.",
+    msg().promptArquivo(),
   ].join("\n");
   return { decision: "block", reason: motivo };
 }

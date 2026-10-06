@@ -39,7 +39,7 @@ describe("criptografia", () => {
     const c = cifrar(Buffer.from("xyz"), senha);
     assert.equal(decifrar(c, senha).toString(), "xyz");
     assert.throws(() => decifrar(c, { modo: 1, segredo: Buffer.from("outra") }), ErroCofre);
-    assert.throws(() => decifrar(c, chave), /criado com senha/);
+    assert.throws(() => decifrar(c, chave), /PIIVEIL_PASSPHRASE/);
   });
 });
 

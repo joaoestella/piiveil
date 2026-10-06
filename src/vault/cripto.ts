@@ -1,4 +1,5 @@
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:crypto";
+import { msg } from "../i18n.js";
 
 /**
  * Formato do arquivo cifrado:
@@ -24,7 +25,7 @@ export class ErroCofre extends Error {
 
 function derivar(material: MaterialChave, sal: Buffer): Buffer {
   if (material.modo === 0) {
-    if (material.segredo.length !== 32) throw new ErroCofre("chave do cofre deve ter 32 bytes");
+    if (material.segredo.length !== 32) throw new ErroCofre(msg().chaveTamanho());
     return material.segredo;
   }
   return scryptSync(material.segredo, sal, 32, { N: 2 ** 15, r: 8, p: 1, maxmem: 64 * 1024 * 1024 });
@@ -42,10 +43,10 @@ export function cifrar(claro: Buffer, material: MaterialChave): Buffer {
 
 export function lerModo(dados: Buffer): ModoChave {
   if (dados.length < TAM_CABECALHO + TAM_TAG || !dados.subarray(0, 4).equals(MAGICO)) {
-    throw new ErroCofre("arquivo do cofre inválido ou corrompido");
+    throw new ErroCofre(msg().cofreCorrompido());
   }
   const modo = dados[4];
-  if (modo !== 0 && modo !== 1) throw new ErroCofre("modo de chave desconhecido no cofre");
+  if (modo !== 0 && modo !== 1) throw new ErroCofre(msg().modoDesconhecido());
   return modo;
 }
 
@@ -53,9 +54,7 @@ export function decifrar(dados: Buffer, material: MaterialChave): Buffer {
   const modo = lerModo(dados);
   if (modo !== material.modo) {
     throw new ErroCofre(
-      modo === 1
-        ? "o cofre foi criado com senha; defina PIIVEIL_PASSPHRASE"
-        : "o cofre foi criado com arquivo de chave; remova PIIVEIL_PASSPHRASE ou limpe o cofre",
+      modo === 1 ? msg().cofreComSenha() : msg().cofreComArquivo(),
     );
   }
   const cabecalho = dados.subarray(0, TAM_CABECALHO);
@@ -69,6 +68,6 @@ export function decifrar(dados: Buffer, material: MaterialChave): Buffer {
   try {
     return Buffer.concat([decifra.update(corpo), decifra.final()]);
   } catch {
-    throw new ErroCofre("não foi possível decifrar o cofre: chave ou senha incorreta, ou arquivo adulterado");
+    throw new ErroCofre(msg().cofreIlegivel());
   }
 }
