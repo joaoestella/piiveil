@@ -2583,7 +2583,7 @@ function desmascararProfundo(valor, cofre, transformar) {
 }
 
 // src/versao.ts
-var VERSAO = "0.1.1";
+var VERSAO = "0.1.2";
 
 // src/hooks/comum.ts
 function contexto(entrada) {
