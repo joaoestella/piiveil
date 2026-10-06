@@ -2097,7 +2097,7 @@ var LUGAR = new Set(
 );
 var TRATAMENTO = /(?:^|[^\p{L}])(?:Sr|Sra|Srta|Dr|Dra|Dom|Dona|Prof|Profa|Exmo|Exma|Ilmo|Ilma|Sr\(a\)|Mr|Mrs|Ms|Miss|Mx)\.?[ \u00A0]$/u;
 var APOS_TRATAMENTO = new RegExp(
-  String.raw`(?<![\p{L}])(?:Sr|Sra|Srta|Dr|Dra|Mr|Mrs|Ms|Mx|Miss)\.?[ \u00A0](?<nome>${PALAVRA}(?:[ \u00A0](?:${PARTICULA}[ \u00A0])?${PALAVRA}){0,4})(?![\p{L}\p{N}_])`,
+  String.raw`(?<![\p{L}])(?:Sr|Sra|Srta|Dr|Dra|Mr|Mrs|Ms|Mx|Miss)\.?(?:[ \u00A0]|\r?\n)(?<nome>${PALAVRA}(?:[ \u00A0](?:${PARTICULA}[ \u00A0])?${PALAVRA}){0,4})(?![\p{L}\p{N}_])`,
   "gud"
 );
 function criarDetectorNomes(opcoes = {}) {

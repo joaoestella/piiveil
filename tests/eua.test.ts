@@ -83,7 +83,7 @@ describe("nomes e empresas em inglês", () => {
   });
   test("sobrenome sozinho após pronome de tratamento", () => {
     assert.deepEqual(achar("Dear Mr. Whitaker, thank you", "PERSON"), ["Whitaker"]);
-    assert.deepEqual(achar("Ms. Alvarez vacated the premises", "PERSON"), ["Alvarez"]);
+    assert.deepEqual(achar("Ms.\nAlvarez vacated the premises", "PERSON"), ["Alvarez"]);
     assert.deepEqual(achar("conforme a Sra. Albuquerque informou", "PERSON"), ["Albuquerque"]);
     assert.deepEqual(achar("Dr. Street was late", "PERSON"), [], "palavra de lugar logo após o tratamento");
   });

@@ -96,7 +96,7 @@ export interface OpcoesNomes {
 
 /** Pronome de tratamento seguido de palavras capitalizadas: o que vem depois é nome, com ou sem prenome conhecido. */
 const APOS_TRATAMENTO = new RegExp(
-  String.raw`(?<![\p{L}])(?:Sr|Sra|Srta|Dr|Dra|Mr|Mrs|Ms|Mx|Miss)\.?[ \u00A0](?<nome>${PALAVRA}(?:[ \u00A0](?:${PARTICULA}[ \u00A0])?${PALAVRA}){0,4})(?![\p{L}\p{N}_])`,
+  String.raw`(?<![\p{L}])(?:Sr|Sra|Srta|Dr|Dra|Mr|Mrs|Ms|Mx|Miss)\.?(?:[ \u00A0]|\r?\n)(?<nome>${PALAVRA}(?:[ \u00A0](?:${PARTICULA}[ \u00A0])?${PALAVRA}){0,4})(?![\p{L}\p{N}_])`,
   "gud",
 );
 
