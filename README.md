@@ -20,12 +20,17 @@ locally: piiveil sends nothing anywhere, and the token map lives in an encrypted
 ## How it works
 
 ```
- file on disk                         what the model sees              what gets written
- ─────────────────────                ───────────────────              ─────────────────────────────
- Jennifer Lynn Alvarez,    Read ──►   [PERSON_1],
- SSN 412-73-9058           (mask)     SSN [SSN_1]
+ 1. Reading: personal data never reaches the model
 
-                                      Write "[PERSON_1]" ──► (unmask) ──► file with "Jennifer Lynn Alvarez"
+    file on disk                              what the model sees
+    Jennifer Lynn Alvarez,     ── Read ──►    [PERSON_1],
+    SSN 412-73-9058              (mask)       SSN [SSN_1]
+
+ 2. Writing: the real data goes back into your files
+
+    what the model writes                     what is saved on disk
+    "[PERSON_1], SSN [SSN_1]"  ── Write ──►   "Jennifer Lynn Alvarez, SSN 412-73-9058"
+                                 (unmask)
 ```
 
 piiveil uses Claude Code hooks:
@@ -34,9 +39,11 @@ piiveil uses Claude Code hooks:
 | :- | :- |
 | `PostToolUse` (every tool) | Finds personal data in the output of Read, Grep, Glob, Bash, WebFetch, MCP tools and the rest, and replaces each item with a token before the model sees it. If anything fails, the content is hidden instead of passed through. |
 | `PreToolUse` (Write, Edit, NotebookEdit, Bash, Grep, Glob, Read) | Replaces tokens with the real values in the tool input before it runs, so written files and commands use the real data. Also blocks Read on PDFs and images (see Limitations). |
-| `MessageDisplay` | Optional and not registered by default: shows the real values on screen in place of the tokens. The model and the transcript keep only the tokens. See Limitations for how to turn it on. |
 | `UserPromptSubmit` | If what you typed contains personal data, the prompt is blocked (it never reaches the model) and piiveil tells you which token to use instead. |
 | `SessionStart` | Tells the model how to work with the tokens. |
+
+An optional `MessageDisplay` hook can also show the real values on screen in place of the tokens. It is not
+registered by default; see [Limitations](#limitations).
 
 The same person, SSN or company always gets the same token within a project, across sessions. Anything already in
 the vault is recognized in any text, even outside the context where it was first detected.

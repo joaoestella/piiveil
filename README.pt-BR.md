@@ -21,12 +21,17 @@ tokens e valores fica num cofre cifrado no seu computador.
 ## Como funciona
 
 ```
- arquivo no disco                      o que o modelo vê                 o que é gravado
- ───────────────────                   ─────────────────                 ───────────────────────────────
- Maria da Silva Souza,     Read ──►    [PERSON_1],
- CPF 111.444.777-35        (mascara)   CPF [CPF_1]
+ 1. Leitura: o dado pessoal não chega ao modelo
 
-                                       Write "[PERSON_1]" ──► (desmascara) ──► arquivo com "Maria da Silva Souza"
+    arquivo no disco                          o que o modelo vê
+    Maria da Silva Souza,      ── Read ──►    [PERSON_1],
+    CPF 111.444.777-35           (mascara)    CPF [CPF_1]
+
+ 2. Gravação: o dado real volta para os seus arquivos
+
+    o que o modelo escreve                    o que é gravado no disco
+    "[PERSON_1], CPF [CPF_1]"  ── Write ──►   "Maria da Silva Souza, CPF 111.444.777-35"
+                                 (desmascara)
 ```
 
 O piiveil usa os hooks do Claude Code:
@@ -35,9 +40,11 @@ O piiveil usa os hooks do Claude Code:
 | :- | :- |
 | `PostToolUse` (todas as ferramentas) | Detecta dados pessoais na saída de Read, Grep, Glob, Bash, WebFetch, MCP e das demais ferramentas e troca cada um por um token antes de o modelo ver. Se algo falhar, oculta o conteúdo em vez de deixá-lo passar. |
 | `PreToolUse` (Write, Edit, NotebookEdit, Bash, Grep, Glob, Read) | Troca os tokens pelos valores reais na entrada da ferramenta antes de ela rodar, para que os arquivos gravados e os comandos usem os dados reais. Também bloqueia o Read de PDFs e imagens (ver Limitações). |
-| `MessageDisplay` | Opcional e não registrado por padrão: mostra na tela os valores reais no lugar dos tokens. O modelo e a transcrição continuam só com tokens. Veja em Limitações como ligar. |
 | `UserPromptSubmit` | Se o que você digitou contém dado pessoal, o prompt é bloqueado (não chega ao modelo) e o piiveil mostra o token que você pode usar no lugar. |
 | `SessionStart` | Explica ao modelo como usar os tokens. |
+
+Um hook `MessageDisplay` opcional também pode mostrar na tela os valores reais no lugar dos tokens. Ele não é
+registrado por padrão; veja [Limitações](#limitações).
 
 A mesma pessoa, CPF ou empresa recebe sempre o mesmo token dentro do projeto, em todas as sessões. O que já está no
 cofre é reconhecido em qualquer texto, mesmo fora do contexto em que foi detectado pela primeira vez.
