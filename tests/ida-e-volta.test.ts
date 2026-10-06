@@ -62,13 +62,13 @@ describe("exemplos da documentação", () => {
   });
   afterEach(() => amb.limpar());
 
-  for (const nome of ["peticao-inicial.md", "pagamentos.csv"]) {
-    test(`exemplos/${nome} volta idêntico e não expõe CPF, CNPJ nem e-mail`, () => {
-      const original = readFileSync(new URL(`../../exemplos/${nome}`, import.meta.url), "utf8");
+  for (const nome of ["peticao-inicial.md", "pagamentos.csv", "demand-letter.md"]) {
+    test(`examples/${nome} volta idêntico e não expõe CPF, CNPJ, SSN nem e-mail`, () => {
+      const original = readFileSync(new URL(`../../examples/${nome}`, import.meta.url), "utf8");
       const c = Cofre.abrir(amb.projeto);
       const r = mascarar(original, c);
       assert.equal(desmascarar(r.texto, c), original);
-      assert.doesNotMatch(r.texto, /\d{3}\.\d{3}\.\d{3}-\d{2}|\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}|@exemplo/);
+      assert.doesNotMatch(r.texto, /\d{3}\.\d{3}\.\d{3}-\d{2}|\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}|\d{3}-\d{2}-\d{4}|@exemplo|@example/);
     });
   }
 });
